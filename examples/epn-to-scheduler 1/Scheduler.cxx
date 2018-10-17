@@ -39,24 +39,11 @@ void Scheduler::receive() {
   
   LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs <<" sent in the interval of: "<<msgFromSender.interval<<" ms. ";
   
- //return msgFromSender;
+
   
   
 }
-/*
-void Scheduler::sender(EPNtoScheduler receivedMsg) {
-    auto &mySendingChan = GetChannel("data1");
-    
-    FairMQMessagePtr message = mySendingChan.NewMessage(sizeof (EPNtoScheduler));
-    std::memcpy(message->GetData(), &receivedMsg, sizeof(EPNtoScheduler));
-    mySendingChan.Send(message);
-    
-      LOG(INFO)<<"sent ID: "<<receivedMsg.Id<<" and amount of free slots  "<<receivedMsg.freeSlots<< " general amount of EPNs: " <<receivedMsg.numEPNs << " sent in the interval of: " <<receivedMsg.interval<<" ms. ";
 
-
-
-}
-*/
 
 Scheduler::~Scheduler()
 {
