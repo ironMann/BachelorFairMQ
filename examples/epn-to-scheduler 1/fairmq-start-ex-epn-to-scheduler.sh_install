@@ -1,0 +1,23 @@
+#!/bin/bash
+
+export FAIRMQ_PATH=/home/charlotte/fairmq/fairmq_install/bin/fairmq
+
+EPN1="fairmq-ex-epn-to-scheduler-EPN"
+EPN1+=" --id EPN1"
+EPN1+=" --rate 1"
+EPN1+=" --mq-config $exepntoschedulerconfig"
+#EPN1+=" --channel-config name=data,type=push,method=bind,address=tcp://*:5555,rateLogging=0"
+xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq/fairmq_install/bin/$EPN1 &
+
+EPN2="fairmq-ex-epn-to-scheduler-EPN"
+EPN2+=" --id EPN2"
+EPN2+=" --rate 1"
+EPN2+=" --mq-config $exepntoschedulerconfig"
+#EPN2+=" --channel-config name=data,type=push,method=bind,address=tcp://*:5555,rateLogging=0"
+xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq/fairmq_install/bin/$EPN2 &
+
+SCHEDULER="fairmq-ex-epn-to-scheduler-scheduler"
+SCHEDULER+=" --id scheduler1"
+SCHEDULER+=" --mq-config $exepntoschedulerconfig"
+#SCHEDULER+=" --channel-config name=data,type=pull,method=connect,address=tcp://localhost:5555,rateLogging=0"
+xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq/fairmq_install/bin/$SCHEDULER &
