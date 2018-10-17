@@ -20,7 +20,7 @@ class Scheduler : public FairMQDevice
   protected:
     bool HandleData(FairMQMessagePtr&, int);
     void receive();
-    //void sender(EPNtoScheduler receivedMsg);
+
 
 
 };
