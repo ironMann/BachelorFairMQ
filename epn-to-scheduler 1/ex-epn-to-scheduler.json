@@ -1,0 +1,54 @@
+{
+    "fairMQOptions": {
+        "devices": [
+            {
+                "key": "EPN",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "connect",
+                                "address": "tcp://localhost:5555",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    },
+
+                        "sockets": 
+                            {
+                                "type": "push",
+                                "method": "connect",
+                                "address": "tcp://localhost:5556",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            }
+            ]
+            },
+            {
+                "id": "scheduler1",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "bind",
+                                "address": "tcp://localhost:5555",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
