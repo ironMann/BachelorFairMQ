@@ -1,0 +1,55 @@
+#!/bin/bash
+
+export FAIRMQ_PATH=/home/charlotte/fairmq/fairmq
+
+transport="zeromq"
+
+if [[ $1 =~ ^[a-z]+$ ]]; then
+    transport=$1
+fi
+
+# setup a trap to kill everything if the test fails/timeouts
+trap 'kill -TERM $FLP_PID; kill -TERM $EPN_PID; kill -TERM $SCHEDULER_PID; wait $FLP_PID; wait $EPN_PID; wait $SCHEDULER_PID;' TERM
+
+
+EPN="fairmq-ex-SCHEDULER-FLP-EPN-epn"
+EPN+=" --id epn1"
+EPN+=" --transport $transport"
+EPN+=" --verbosity veryhigh"
+EPN+=" --max-iterations 1"
+EPN+=" --control static --color false"
+EPN+=" --channel-config name=data,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5555"
+EPN+="                  name=broadcast,type=sub,method=connect,rateLogging=0,address=tcp://localhost:5005"
+/home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$EPN &
+EPN_PID=$!
+
+sleep 1
+
+FLP="fairmq-ex-SCHEDULER-FLP-EPN-flp"
+FLP+=" --id flp1"
+FLP+=" --transport $transport"
+FLP+=" --verbosity veryhigh"
+FLP+=" --max-iterations 1"
+FLP+=" --control static --color false"
+FLP+=" --channel-config name=data,type=push,method=bind,rateLogging=0,address=tcp://*:5555"
+FLP+="                  name=broadcast,type=sub,method=connect,rateLogging=0,address=tcp://localhost:5005"
+/home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$FLP &
+FLP_PID=$!
+
+SCHEDULER="fairmq-ex-SCHEDULER-FLP-EPN-scheduler"
+SCHEDULER+=" --id scheduler1"
+SCHEDULER+=" --transport $transport"
+SCHEDULER+=" --verbosity veryhigh"
+SCHEDULER+=" --control static --color false"
+SCHEDULER+=" --channel-config name=broadcast,type=pub,method=bind,rateLogging=0,address=tcp://*:5005"
+/home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$SCHEDULER &
+SCHEDULER_PID=$!
+
+wait $FLP_PID
+wait $EPN_PID
+
+# stop scheduler
+kill -SIGINT $SCHEDULER_PID
+
+# wait for scheduler to finish
+wait $SCHEDULER_PID
