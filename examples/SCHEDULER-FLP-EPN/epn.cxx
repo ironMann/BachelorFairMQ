@@ -67,39 +67,37 @@ std::string epn::getChannel(char number){
    }
 
 
-void epn::receive(){
-        for(uint64_t i=0; i<numFLPS; i++){
-        auto &myRecvChan = GetChannel("data", i);
+void epn::receive(){   
+// TODO: poller
 
-        FLPtoEPN messagei;
+for(uint64_t i=0; i<numFLPS; i++){
+    auto &myRecvChan = GetChannel("data", i);
 
-        FairMQMessagePtr aMessage = myRecvChan.NewMessage();
+    FLPtoEPN messagei;
+    FairMQMessagePtr aMessage = myRecvChan.NewMessage();
 
-        myRecvChan.Receive(aMessage);
+    myRecvChan.Receive(aMessage);
 
-        std::memcpy(&messagei, aMessage->GetData(), sizeof(FLPtoEPN));
+    std::memcpy(&messagei, aMessage->GetData(), sizeof(FLPtoEPN));
 
-        if(aMessage->GetData(), &messagei){
-            LOG(info) << "Epn received data: " <<messagei.IdOfFlp << endl;
+    // you can assume the message is valid
+    // MAKE SURE to fill the correct `IdOfTF` at the FLP side!
+    LOG(INFO) << "Epn received TF: " << messagei.IdOfTF << " from EPN: " <<messagei.IdOfFlp;
 
-            rcvdSTFs.insert(std::pair<int,int>(messagei.IdOfFlp, sTF));
-            if(checkFLP()){
-              //insertfunction that writes values to file...
+    // rewrite this as we discussed
+    rcvdSTFs[messagei.IdOfTF] += 1;
 
-              rcvdSTFs.clear();
-              if(freeSlots!=0){
-                float x = getDelay();
-                LOG(INFO) << "Delay work for:" << x << "seconds\n" << endl;
-                std::thread t3(MyDelayedFun, x, &freeSlots);
-                t3.detach();
-                }
-                else{
-                  LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY."<<endl;
-                }
-            }
-         }
-      }
+    // assert the boundaries
+    assert(rcvdSTFs[messagei.IdOfTF] <= numFLPS);
+    // check if all FLPs sent the same STF (TF is complete)
+    if (rcvdSTFs[messagei.IdOfTF] == numFLPS) {
+        float x = getDelay();
+        LOG(INFO) << "Delay work for:" << x << "seconds\n" << endl;
+        std::thread t3(MyDelayedFun, x, &freeSlots);
+        t3.detach();
     }
+  }
+}
 
 
 bool epn::checkFLP(){
