@@ -61,39 +61,55 @@ return true;
 void epn::receive(){
         FairMQPollerPtr poller(NewPoller("data"));
         poller->Poll(100);
+
+
         for(uint64_t i=0; i<numFLPS; i++){
+
+          if (!poller->CheckInput("data", i)) {
+            continue;
+          }
+
           auto &myRecvChan = GetChannel("data", i);
 
           FLPtoEPN messagei;
 
           FairMQMessagePtr aMessage = myRecvChan.NewMessage();
 
-          myRecvChan.Receive(aMessage);
+          if (sizeof(FLPtoEPN) != myRecvChan.Receive(aMessage)) {
+            LOG(ERROR) << "Bad Message from FLP" << i+1;
+            continue;
+          }
 
           std::memcpy(&messagei, aMessage->GetData(), sizeof(FLPtoEPN));
 
-          if(myRecvChan.Receive(aMessage)==sizeof(FLPtoEPN)){
-          LOG(info) << "Epn received data from FLP number: " <<messagei.IdOfFlp << " and sTF number is "<< messagei.sTF <<endl;
+          if (messagei.IdOfFlp != (i+1)) {
+            LOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
+            continue;
+          }
+
+          LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
 
           rcvdSTFs[messagei.sTF]++;
+
           for( it=rcvdSTFs.begin(); it!=rcvdSTFs.end(); it++){
             cout<< it->first<<" =>"<< it->second<<endl;
           }
-          assert(rcvdSTFs[messagei.sTF]<=numFLPS);
-          if(rcvdSTFs[sTF]==numFLPS){
-              freeSlots--;
-              if(freeSlots>=0){
-                float x = getDelay();
-                LOG(INFO) << "Delay work for:" << x << "seconds\n" << endl;
-                std::thread t3(MyDelayedFun, x, &freeSlots);
-                t3.detach();
-                }
-                else{
-                  LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY."<<endl;
-                  freeSlots=0;
-                }
+
+          assert(rcvdSTFs[messagei.sTF] <= numFLPS);
+
+          if(rcvdSTFs[sTF] == numFLPS){
+            freeSlots--;
+
+            if(freeSlots>=0) {
+              float x = getDelay();
+              LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
+              std::thread t3(MyDelayedFun, x, &freeSlots);
+              t3.detach();
+            } else {
+              LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
+              freeSlots=0;
             }
-         }
+          }
       }
     }
 
@@ -122,6 +138,8 @@ thread epn::senderThread(int* memory, uint64_t* numepns, int* id) {
           return std::thread([=] {
           this->send(memory,numepns,id);
           });
+
+          // return std::thread(&epn::send, this, memory,numepns,id);
       }
 
 void epn:: MyDelayedFun(float delayWork,int* memory){
