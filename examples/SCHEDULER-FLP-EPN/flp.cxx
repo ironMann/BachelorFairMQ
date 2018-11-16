@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define FLPLOG(s) LOG(s) << "FLP[" << myId << "]: "
+
 namespace example_SCHEDULER_FLP_EPN
 {
 
@@ -34,7 +36,7 @@ void flp::InitTask()
     amountEPNs = fConfig->GetValue<int>("amountEPNs");
     numEPNS= fConfig->GetValue<uint64_t>("numEPNS");
     socket = fConfig->GetValue<int>("socket");
-    cout << "socket number: "<< socket << endl;
+    FLPLOG(INFO)  << "socket number: "<< socket;
     myId = fConfig->GetValue<int>("myId");
     arrayofEpns = new int[amountEPNs];
 }
@@ -49,7 +51,7 @@ void flp::Run()
             //I expect this kind of message
             std::vector<uint64_t> msgIReceive (amountEPNs, 0);
             for(auto it: msgIReceive){
-              cout<<it<<endl;
+              FLPLOG(INFO) <<it;
             }
 
             //receive a message
@@ -61,9 +63,9 @@ void flp::Run()
             if(aMessage->GetSize() ==((sizeof(uint64_t))*amountEPNs)){
               int i=0;
               for(vector<uint64_t>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
-              LOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
+              FLPLOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
               arrayofEpns[i]=*iter;
-              LOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
+              FLPLOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
               i++;
 
 
@@ -75,8 +77,8 @@ void flp::Run()
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
-            cout << "arrayofEpns["<<i<<"]: " <<c<<endl;
-            cout<<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF<< endl;
+            FLPLOG(INFO)  << "arrayofEpns["<<i<<"]: " <<c;
+            FLPLOG(INFO) <<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF;
             auto &mySendingChan = GetChannel("data", (c-1));
             //the message I want to send
             FLPtoEPN MsgFlpEpn;

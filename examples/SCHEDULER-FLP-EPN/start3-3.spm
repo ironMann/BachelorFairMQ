@@ -1,0 +1,9 @@
+pn40: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-scheduler --id scheduler1 --amountEPNs 3 --numEPNS 3 --numFLPS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 16 --control=static
+
+pn15: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-epn --id epn1 --myId 1 --maxSlots 4 --numEPNS 3 --numFLPS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static
+pn16: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-epn --id epn2 --myId 2 --maxSlots 4 --numEPNS 3 --numFLPS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static
+pn17: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-epn --id epn3 --myId 3 --maxSlots 4 --numEPNS 3 --numFLPS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static
+
+pn18: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-flp --id flp1 --myId 1 --socket 0 --amountEPNs 3 --numEPNS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static
+pn19: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-flp --id flp2 --myId 2 --socket 1 --amountEPNs 3 --numEPNS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static
+pn20: /home/neskovic/bsc/fairmq_build/examples/SCHEDULER-FLP-EPN/fairmq-ex-SCHEDULER-FLP-EPN-flp --id flp3 --myId 3 --socket 2 --amountEPNs 3 --numEPNS 3 --mq-config /home/neskovic/bsc/fairmq2/examples/SCHEDULER-FLP-EPN/conf.json --io-threads 8 --control=static

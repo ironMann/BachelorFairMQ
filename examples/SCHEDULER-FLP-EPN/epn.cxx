@@ -11,7 +11,7 @@
 #include <random>
 #include <thread>
 
-
+#define EPNLOG(s) LOG(s) << "EPN[" << Id << "]: "
 
 using namespace std;
 
@@ -76,14 +76,14 @@ void epn::receive(){
           FairMQMessagePtr aMessage = myRecvChan.NewMessage();
 
           if (sizeof(FLPtoEPN) != myRecvChan.Receive(aMessage)) {
-            LOG(ERROR) << "Bad Message from FLP" << i+1;
+            EPNLOG(ERROR) << "Bad Message from FLP" << i+1;
             continue;
           }
 
           std::memcpy(&messagei, aMessage->GetData(), sizeof(FLPtoEPN));
 
           if (messagei.IdOfFlp != (i+1)) {
-            LOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
+            EPNLOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
             continue;
           }
 
@@ -91,11 +91,11 @@ void epn::receive(){
 
           rcvdSTFs[messagei.sTF]++;
           if(rcvdSTFs[messagei.sTF] == numFLPS){
-            LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
+            EPNLOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
           /*
           for( it=rcvdSTFs.begin(); it!=rcvdSTFs.end(); it++){
-            cout<< it->first<<" =>"<< it->second<<endl;
+            EPNLOG(INFO)<< it->first<<" =>"<< it->second<<endl;
           }
           */
           assert(rcvdSTFs[messagei.sTF] <= numFLPS);
@@ -105,20 +105,16 @@ void epn::receive(){
 
             if(freeSlots>=0) {
               float x = getDelay();
-              LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
-              std::thread t3(MyDelayedFun, x, &freeSlots);
+              EPNLOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
+              std::thread t3(&epn::MyDelayedFun, this, x, &freeSlots);
               t3.detach();
             } else {
-              LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
+              EPNLOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
               freeSlots=0;
             }
           }
       }
     }
-
-
-
-
 
 
 void epn::send(int* memory, uint64_t* numepns, int* id){
@@ -132,7 +128,7 @@ void epn::send(int* memory, uint64_t* numepns, int* id){
             std::memcpy(message->GetData(), &myMsg, sizeof(EPNtoScheduler));
             mySendingChan.Send(message);
 
-            LOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
+            EPNLOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
             }
 }
@@ -145,11 +141,11 @@ thread epn::senderThread(int* memory, uint64_t* numepns, int* id) {
           // return std::thread(&epn::send, this, memory,numepns,id);
       }
 
-void epn:: MyDelayedFun(float delayWork,int* memory){
+void epn::MyDelayedFun(float delayWork, int* memory){
      //(*memory)--;
-     cout<<"amount of memory slots after decrementing: "<<*memory<<endl;
+     EPNLOG(INFO)<<"amount of memory slots after decrementing: "<<*memory<<endl;
      std::this_thread::sleep_for(std::chrono::milliseconds(long  (delayWork*1000)));
-     cout<<"Delayed thread executioning the work now! \n";
+     EPNLOG(INFO)<<"Delayed thread executioning the work now! \n";
      (*memory)++;
 }
 
@@ -157,7 +153,7 @@ float epn:: getDelay(){
      static std::default_random_engine generator;
      std::normal_distribution<float> distribution(procTime, procDev);
      float delay = distribution(generator);
-     cout<<"Delay work for:" << delay <<"seconds\n";
+     EPNLOG(INFO)<<"Delay work for:" << delay <<"seconds\n";
      return delay;
 }
 

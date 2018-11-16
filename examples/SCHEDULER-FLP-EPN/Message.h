@@ -4,7 +4,6 @@
 #define MESSAGE_H
 
 #include <string>
-#include "/home/charlotte/fairmq/fairmq/FairMQDevice.h"
 #include <vector>
 
 namespace example_SCHEDULER_FLP_EPN
