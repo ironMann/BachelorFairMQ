@@ -58,7 +58,7 @@ class epn : public FairMQDevice
     std::thread senderThread(int* memory, uint64_t* numepns, int* id);
 
 
-    static void MyDelayedFun(float delayWork, int* memory);
+    void MyDelayedFun(float delayWork, int* memory);
     float getDelay();
 
 

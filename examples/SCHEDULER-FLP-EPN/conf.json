@@ -1,0 +1,354 @@
+{
+    "fairMQOptions": {
+        "devices": [
+            {
+                "id": "flp1",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25556",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25557",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25558",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            },
+            {    "name": "schedflp",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn40:25455",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            }
+            ]
+            },
+            {
+                "id": "flp2",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25570",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25571",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25572",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            },
+            {    "name": "schedflp",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn40:25456",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            }
+            ]
+            },
+            {
+                "id": "flp3",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25573",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25574",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25575",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            },
+            {    "name": "schedflp",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn40:25457",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+            }
+            ]
+            },
+            {
+                "id": "epn1",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn18:25556",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn19:25570",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn20:25573",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+
+                        ]
+                    },
+                    {
+                        "name": "epnsched",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25560",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "epn2",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn18:25557",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn19:25571",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn20:25574",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    },
+                    {
+                        "name": "epnsched",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25561",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "epn3",
+                "channels": [
+                    {
+                        "name": "data",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn18:25558",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn19:25572",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn20:25575",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+                        ]
+                    },
+                    {
+                        "name": "epnsched",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25562",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "scheduler1",
+                "channels": [
+                    {
+                        "name": "schedflp",
+                        "sockets": [
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25455",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25456",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            },
+                            {
+                                "type": "push",
+                                "method": "bind",
+                                "address": "tcp://*:25457",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 5
+                            }
+
+                        ]
+                   },
+                   {
+
+                        "name": "epnsched",
+                        "sockets": [
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn15:25560",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn16:25561",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            },
+                            {
+                                "type": "pull",
+                                "method": "connect",
+                                "address": "tcp://pn17:25562",
+                                "sndBufSize": 1000,
+                                "rcvBufSize": 1000,
+                                "rateLogging": 0
+                            }
+                        ]
+                   }
+              ]
+
+
+
+            }
+        ]
+    }
+}

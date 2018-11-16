@@ -16,6 +16,8 @@
 
 using namespace std;
 
+#define SLOG(s) LOG(s) << "SCHED[*]: "
+
 namespace example_SCHEDULER_FLP_EPN
 {
 
@@ -66,7 +68,7 @@ bool scheduler::ConditionalRun()
     std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
 
       if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
-        LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
+        SLOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs;
         update(msgFromSender.Id, msgFromSender.freeSlots);
         printHist();
         }
@@ -80,7 +82,7 @@ bool scheduler::ConditionalRun()
         sched.assign(arrayForFlps, arrayForFlps+amountEPNs);
         //m=(m+amountEPNs)%numEPNS;
         for(auto it:sched){
-          LOG(info)<<it;
+          SLOG(info)<<it;
         }
         keyForGeneratingArray = localkey;
         printArrFLP(arrayForFlps, amountEPNs);
@@ -113,10 +115,10 @@ uint64_t scheduler::getHistKey(){
     auto duration = time.time_since_epoch();
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-    //std::cout << "Milliseconds : " << millis << std::endl;
+    //std::SLOG(INFO) << "Milliseconds : " << millis;
     //determine the interval (key for the hist map)
     const std::uint64_t intKey = millis / intMs * intMs;
-    //cout<< "histKey : " << intKey << endl;
+    //SLOG(INFO)<< "histKey : " << intKey;
 
     return intKey;
 
@@ -138,12 +140,11 @@ void scheduler::printHist() {
         //const auto Key = keyVal.first;
         const auto &Epns = keyVal.second;
 
-        //std::cout << "TimeInterval: " << Key << endl;
+        //std::SLOG(INFO) << "TimeInterval: " << Key;
         for(auto &epnI : Epns) {
-            cout << epnI.ts << ":" << epnI.memVal << " ";
+            SLOG(INFO) << epnI.ts << ":" << epnI.memVal << " ";
         }
     }
-    cout << endl;
 }
 
 void scheduler::update(uint64_t epnId, uint64_t myMem) {
@@ -218,7 +219,7 @@ void scheduler::toFile(){
             myfile << history[(*a).first].at(i).memVal << ", ";
 
         }
-        myfile << history[(*a).first].at(numEPNS-1).memVal << endl;
+        myfile << history[(*a).first].at(numEPNS-1).memVal;
     }
 }
 
@@ -270,24 +271,24 @@ int scheduler::maxSearch(int arr[]){
 
 void scheduler::printArrFLP(int arr[], int length){
      for (int n=0; n<length; ++n)
-    cout << "Printing the array for the flps. number: "<< n+1<<" goes to: "<< arr[n] <<endl;
+    SLOG(INFO) << "Printing the array for the flps. number: "<< n+1<<" goes to: "<< arr[n];
 }
 
 
 void scheduler::printfreeSlots(int arr[], int length){
        for (int n=0; n<length; ++n)
-      cout << "free Slots: "<< arr[n] << ' ';
-    cout << '\n';
+      SLOG(INFO) << "free Slots: "<< arr[n] << ' ';
+    SLOG(INFO) << '\n';
   }
 
 
 
 void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
-    cout<<"inside sending!"<<endl;
-    cout<<"number of FLPS: "<< (*num) << endl;
+    SLOG(INFO)<<"inside sending!";
+    SLOG(INFO)<<"number of FLPS: "<< (*num);
     for(uint64_t i=0; i<(*num); i++){
-      cout<<"inside forloop for sending!"<<endl;
-      cout<<"I: "<< i << endl;
+      SLOG(INFO)<<"inside forloop for sending!";
+      SLOG(INFO)<<"I: "<< i;
       auto &mySendingChan = GetChannel("schedflp", i);
 
       FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*(*numE));
@@ -298,7 +299,7 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
 
       for(vector<uint64_t>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
 
-        LOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
+        SLOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
       }
 
 
