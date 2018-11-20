@@ -10,6 +10,7 @@
 
 #include "FairMQDevice.h"
 #include "Message.h"
+#include <time.h>
 #include <iostream>
 #include <string>
 #include <random>
@@ -26,7 +27,7 @@ class epn : public FairMQDevice
   public:
     epn();
     virtual ~epn();
-    void send(int* memory, uint64_t* numepns, int* id);
+    void send(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max);
 
 
   protected:
@@ -42,6 +43,10 @@ class epn : public FairMQDevice
     const float procTime;
     const float procDev;
 
+    uint64_t startTime;
+    const uint64_t programTimeMsec; //the duration of the program.
+    const unsigned intMs;
+
 
 
 
@@ -55,11 +60,13 @@ class epn : public FairMQDevice
 
 
 
-    std::thread senderThread(int* memory, uint64_t* numepns, int* id);
+    std::thread senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max);
 
 
-    void MyDelayedFun(float delayWork, int* memory);
+    static void MyDelayedFun(float delayWork, int* memory);
     float getDelay();
+
+    uint64_t getHistKey();
 
 
 
