@@ -16,8 +16,6 @@
 
 using namespace std;
 
-#define SLOG(s) LOG(s) << "SCHED[*]: "
-
 namespace example_SCHEDULER_FLP_EPN
 {
 
@@ -26,18 +24,19 @@ scheduler::scheduler()
           ,numEPNS(0)
           ,numFLPS(0)
           ,intMs(1000) //one second
-          ,aliveTimeMs(10*intMs)
+          ,progTime(60*1*intMs)//alive time of the program
           ,historyMaxMs(60*1*intMs)//one minute
           ,sched()
-          ,amountSubtimeframes(2)
+          ,msBetweenSubtimeframes(2)
           ,amountEPNs(0)
           ,intervalFLPs(0.5)
           ,arrayForFlps(0)
           ,tooOld(0)
           ,keyForToFile(0)
           ,keyForGeneratingArray(0)
+          ,keyForExiting(0)
           ,scheduleNumber(0)
-          ,m(1)
+          ,m(1) //what the hell is m for? It's for the round robin thing
 {
 }
 
@@ -47,6 +46,7 @@ void scheduler::InitTask(){
     amountEPNs=fConfig->GetValue<uint64_t>("amountEPNs");
     keyForToFile = getHistKey();
     keyForGeneratingArray=getHistKey();
+    keyForExiting=getHistKey();
     initialize(numEPNS);
     printHist();
     arrayForFlps = new int[amountEPNs];
@@ -56,34 +56,60 @@ void scheduler::InitTask(){
 
 bool scheduler::ConditionalRun()
 {
-  for(uint64_t i=0; i < numEPNS; i++){
-    auto &myRecvChan = GetChannel("epnsched",i);
+  //FairMQPollerPtr poller(NewPoller("epnsched"));
+  //poller->Poll(1000);
+    if((getHistKey()-keyForExiting)>progTime){
+      LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+      ChangeState("READY");
+      ChangeState("RESETTING_TASK");
+      ChangeState("DEVICE_READY");
+      ChangeState("RESETTING_DEVICE");
+      ChangeState("IDLE");
+      ChangeState("EXITING");
+    }
+    else{
+      for(uint64_t i=0; i < numEPNS; i++){
+      //if (!poller->CheckInput("epnsched", i)) {
+        //continue;
+      //}
 
-    // I expect this kind of messages
-    EPNtoScheduler msgFromSender;
-    // receive a message
-    FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-    myRecvChan.Receive(aMessage);
-    // get the data of the FairMQ message
-    std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
-
-      if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
-        SLOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs;
+        auto &myRecvChan = GetChannel("epnsched",i);
+        LOG(INFO)<<"Got channel";
+        // I expect this kind of messages
+        EPNtoScheduler msgFromSender;
+        // receive a message
+        FairMQMessagePtr aMessage = myRecvChan.NewMessage();
+        LOG(INFO)<<"defined message pointer."; //put if statetement in here
+        if((getHistKey()-keyForExiting)>progTime){
+              LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+              ChangeState("READY");
+              ChangeState("RESETTING_TASK");
+              ChangeState("DEVICE_READY");
+              ChangeState("RESETTING_DEVICE");
+              ChangeState("IDLE");
+              ChangeState("EXITING");
+            }
+            else{
+        myRecvChan.Receive(aMessage);
+        LOG(INFO)<<"received a message.";
+        // get the data of the FairMQ message
+        std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
+        LOG(INFO)<<"copied message into own...";
+        if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
+        LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
         update(msgFromSender.Id, msgFromSender.freeSlots);
         printHist();
         }
+      }
     }
 
     uint64_t localkey= getHistKey();
-     if(localkey>=(keyForGeneratingArray + intervalFLPs*intMs)){
+    if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<progTime)){
         //sched=simpleRRSched(m);
         arrayForFlps = generateArray();
         sched = vector<uint64_t> (amountEPNs,(uint64_t) 0);
         sched.assign(arrayForFlps, arrayForFlps+amountEPNs);
         //m=(m+amountEPNs)%numEPNS;
-        for(auto it:sched){
-          SLOG(info)<<it;
-        }
         keyForGeneratingArray = localkey;
         printArrFLP(arrayForFlps, amountEPNs);
         scheduleNumber++;
@@ -91,14 +117,27 @@ bool scheduler::ConditionalRun()
         t1.detach();
         }
 
+    else{
+      LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+      ChangeState("READY");
+      ChangeState("RESETTING_TASK");
+      ChangeState("DEVICE_READY");
+      ChangeState("RESETTING_DEVICE");
+      ChangeState("IDLE");
+      ChangeState("EXITING");
 
 
 
+    }
 
 
     return true;
 
-    }
+  }
+}
+
+
+
 
 thread scheduler::senderThread(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
     return std::thread([=]{
@@ -115,10 +154,10 @@ uint64_t scheduler::getHistKey(){
     auto duration = time.time_since_epoch();
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-    //std::SLOG(INFO) << "Milliseconds : " << millis;
+    //std::cout << "Milliseconds : " << millis << std::endl;
     //determine the interval (key for the hist map)
     const std::uint64_t intKey = millis / intMs * intMs;
-    //SLOG(INFO)<< "histKey : " << intKey;
+    //cout<< "histKey : " << intKey << endl;
 
     return intKey;
 
@@ -140,11 +179,12 @@ void scheduler::printHist() {
         //const auto Key = keyVal.first;
         const auto &Epns = keyVal.second;
 
-        //std::SLOG(INFO) << "TimeInterval: " << Key;
+        //std::cout << "TimeInterval: " << Key << endl;
         for(auto &epnI : Epns) {
-            SLOG(INFO) << epnI.ts << ":" << epnI.memVal << " ";
+            cout << epnI.ts << ":" << epnI.memVal << " ";
         }
     }
+    cout << endl;
 }
 
 void scheduler::update(uint64_t epnId, uint64_t myMem) {
@@ -219,7 +259,7 @@ void scheduler::toFile(){
             myfile << history[(*a).first].at(i).memVal << ", ";
 
         }
-        myfile << history[(*a).first].at(numEPNS-1).memVal;
+        myfile << history[(*a).first].at(numEPNS-1).memVal << endl;
     }
 }
 
@@ -271,24 +311,24 @@ int scheduler::maxSearch(int arr[]){
 
 void scheduler::printArrFLP(int arr[], int length){
      for (int n=0; n<length; ++n)
-    SLOG(INFO) << "Printing the array for the flps. number: "<< n+1<<" goes to: "<< arr[n];
+    cout << "Printing the array for the flps. number: "<< n+1<<" goes to: "<< arr[n] <<endl;
 }
 
 
 void scheduler::printfreeSlots(int arr[], int length){
        for (int n=0; n<length; ++n)
-      SLOG(INFO) << "free Slots: "<< arr[n] << ' ';
-    SLOG(INFO) << '\n';
+      cout << "free Slots: "<< arr[n] << ' ';
+    cout << '\n';
   }
 
 
 
 void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
-    SLOG(INFO)<<"inside sending!";
-    SLOG(INFO)<<"number of FLPS: "<< (*num);
+    cout<<"inside sending!"<<endl;
+    cout<<"number of FLPS: "<< (*num) << endl;
     for(uint64_t i=0; i<(*num); i++){
-      SLOG(INFO)<<"inside forloop for sending!";
-      SLOG(INFO)<<"I: "<< i;
+      cout<<"inside forloop for sending!"<<endl;
+      cout<<"I: "<< i << endl;
       auto &mySendingChan = GetChannel("schedflp", i);
 
       FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*(*numE));
@@ -299,7 +339,7 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
 
       for(vector<uint64_t>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
 
-        SLOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
+        LOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
       }
 
 
