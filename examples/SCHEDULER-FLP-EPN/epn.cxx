@@ -10,8 +10,9 @@
 #include <string>
 #include <random>
 #include <thread>
+#include <time.h>
 
-#define EPNLOG(s) LOG(s) << "EPN[" << Id << "]: "
+
 
 using namespace std;
 
@@ -29,18 +30,24 @@ epn::epn()
     ,rcvdSTFs()
     ,sTF(1)
     ,it()
+    ,startTime(0)
+    ,programTimeMsec(1*60*1000)
+    ,intMs(1000)
+
     {
     static_assert(std::is_pod<EPNtoScheduler>::value==true, "my struct  is not pod");
     }
 
 void epn::InitTask()
 {
+
+        startTime=getHistKey();
         Id = fConfig->GetValue<int>("myId");
         maxSlots = 4;
         freeSlots = maxSlots;
         numEPNS = fConfig->GetValue<uint64_t>("numEPNS");
         numFLPS = fConfig->GetValue<uint64_t>("numFLPS");
-        std::thread th1 = senderThread(&freeSlots, &numEPNS, &Id);
+        std::thread th1 = senderThread(&freeSlots, &numEPNS, &Id, &startTime, &programTimeMsec);
         th1.detach();
 
     }
@@ -48,13 +55,39 @@ void epn::InitTask()
 
 bool epn::ConditionalRun()
 {
+  uint64_t currentTime=getHistKey();
+  if(currentTime-startTime>=programTimeMsec){
+    LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+    ChangeState("READY");
+    ChangeState("RESETTING_TASK");
+    ChangeState("DEVICE_READY");
+    ChangeState("RESETTING_DEVICE");
+    ChangeState("IDLE");
+    ChangeState("EXITING");
 
+  }
+  else{
      receive();
+     return true;
+   }
 
 
-return true;
 
+}
 
+uint64_t epn::getHistKey(){
+    //get the current time
+    const auto time = std::chrono::high_resolution_clock::now();
+    //get the time from THEN to now
+    auto duration = time.time_since_epoch();
+    const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    //std::cout << "Milliseconds : " << millis << std::endl;
+    //determine the interval (key for the hist map)
+    const std::uint64_t intKey = millis / intMs * intMs;
+    //cout<< "histKey : " << intKey << endl;
+
+    return intKey;
 
 }
 
@@ -76,14 +109,14 @@ void epn::receive(){
           FairMQMessagePtr aMessage = myRecvChan.NewMessage();
 
           if (sizeof(FLPtoEPN) != myRecvChan.Receive(aMessage)) {
-            EPNLOG(ERROR) << "Bad Message from FLP" << i+1;
+            LOG(ERROR) << "Bad Message from FLP" << i+1;
             continue;
           }
 
           std::memcpy(&messagei, aMessage->GetData(), sizeof(FLPtoEPN));
 
           if (messagei.IdOfFlp != (i+1)) {
-            EPNLOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
+            LOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
             continue;
           }
 
@@ -91,11 +124,11 @@ void epn::receive(){
 
           rcvdSTFs[messagei.sTF]++;
           if(rcvdSTFs[messagei.sTF] == numFLPS){
-            EPNLOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
+            LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
           /*
           for( it=rcvdSTFs.begin(); it!=rcvdSTFs.end(); it++){
-            EPNLOG(INFO)<< it->first<<" =>"<< it->second<<endl;
+            cout<< it->first<<" =>"<< it->second<<endl;
           }
           */
           assert(rcvdSTFs[messagei.sTF] <= numFLPS);
@@ -105,11 +138,11 @@ void epn::receive(){
 
             if(freeSlots>=0) {
               float x = getDelay();
-              EPNLOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
-              std::thread t3(&epn::MyDelayedFun, this, x, &freeSlots);
+              LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
+              std::thread t3(MyDelayedFun, x, &freeSlots);
               t3.detach();
             } else {
-              EPNLOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
+              LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
               freeSlots=0;
             }
           }
@@ -117,8 +150,14 @@ void epn::receive(){
     }
 
 
-void epn::send(int* memory, uint64_t* numepns, int* id){
-        while(true){
+
+
+
+
+void epn::send(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max){
+  //change the sending
+        uint64_t now=getHistKey();
+        while((now-(*start))< *max){
             auto &mySendingChan = GetChannel("epnsched");
             EPNtoScheduler myMsg;
             myMsg.Id = *id;
@@ -128,24 +167,26 @@ void epn::send(int* memory, uint64_t* numepns, int* id){
             std::memcpy(message->GetData(), &myMsg, sizeof(EPNtoScheduler));
             mySendingChan.Send(message);
 
-            EPNLOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
+            LOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
+            now=getHistKey();
             }
+
 }
 
-thread epn::senderThread(int* memory, uint64_t* numepns, int* id) {
+thread epn::senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max) {
           return std::thread([=] {
-          this->send(memory,numepns,id);
+          this->send(memory,numepns,id,start, max);
           });
 
           // return std::thread(&epn::send, this, memory,numepns,id);
       }
 
-void epn::MyDelayedFun(float delayWork, int* memory){
+void epn:: MyDelayedFun(float delayWork,int* memory){
      //(*memory)--;
-     EPNLOG(INFO)<<"amount of memory slots after decrementing: "<<*memory<<endl;
+     cout<<"amount of memory slots after decrementing: "<<*memory<<endl;
      std::this_thread::sleep_for(std::chrono::milliseconds(long  (delayWork*1000)));
-     EPNLOG(INFO)<<"Delayed thread executioning the work now! \n";
+     cout<<"Delayed thread executioning the work now! \n";
      (*memory)++;
 }
 
@@ -153,7 +194,7 @@ float epn:: getDelay(){
      static std::default_random_engine generator;
      std::normal_distribution<float> distribution(procTime, procDev);
      float delay = distribution(generator);
-     EPNLOG(INFO)<<"Delay work for:" << delay <<"seconds\n";
+     cout<<"Delay work for:" << delay <<"seconds\n";
      return delay;
 }
 
