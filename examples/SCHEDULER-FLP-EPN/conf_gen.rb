@@ -4,13 +4,18 @@
 require 'pp'
 require 'json'
 require 'io/console'
+require 'shellwords'
 
 def usage(fail)
   usage = %{
 Usage:
   conf_gen.rb <num-FLP> <num-EPN> <node_list>
 
-  NOTE: <node_list> must contain at least 3 nodes
+  NOTE:
+  1. <node_list> must contain at least 3 nodes
+  2. env var TEST_ROOT_DIR : full path to the programs and config files
+  3. env var TEST_NUM_SLOTS : num of TF slots at the epns
+  4. env var TEST_AMOUNT_EPN : amount of TF in the schedule
 
   Examples:
   $ conf_gen.rb 20 10 pn02,pn04,pn05,pn06,pn07,pn08,pn10,pn11,pn12,pn13,pn15,pn16
@@ -25,7 +30,9 @@ Usage:
 end
 
 
-usage(true) if ARGV[0].nil? or ARGV[0].length==0 or ARGV[1].nil? or ARGV[2].nil?
+usage(true) if ARGV[0].nil? or ARGV[0].length==0 or ARGV[1].nil? or ARGV[2].nil? or
+              ENV['TEST_ROOT_DIR'].nil? or ENV['TEST_NUM_SLOTS'].nil? or
+              ENV['TEST_AMOUNT_EPN'].nil?
 
 
 NUM_FLP = ARGV[0].to_i
@@ -76,14 +83,61 @@ DEVICE_HASH =
   :channels => [ ]
 }
 
+
+
+###################
+SCHED_FLP_PORT = 20000
+SCHED_EPN_PORT = 30000
+sched_flp_port = SCHED_FLP_PORT
+sched_epn_port = SCHED_EPN_PORT
+#  sched channel
+sched_dev = Marshal.load(Marshal.dump(DEVICE_HASH))
+sched_dev[:id] = "scheduler"
+
+
+sched_flp_chan = Marshal.load(Marshal.dump(CHAN_HASH))
+sched_flp_chan[:name] = "schedflp"
+
+NUM_FLP.times do | flp |
+  sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
+  sched_socket[:type] = "push"
+  sched_socket[:method] = "bind"
+  sched_socket[:address] = "tcp://*:#{sched_flp_port}"
+  sched_flp_port += 1
+
+  sched_flp_chan[:sockets] << sched_socket
+end
+sched_dev[:channels] << sched_flp_chan
+
+# sched epn channel
+sched_epn_chan = Marshal.load(Marshal.dump(CHAN_HASH))
+sched_epn_chan[:name] = "epnsched"
+
+NUM_EPN.times do | epn |
+  sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
+  sched_socket[:type] = "pull"
+  sched_socket[:method] = "bind"
+  sched_socket[:address] = "tcp://*:#{sched_epn_port}"
+  sched_epn_port += 1
+
+  sched_epn_chan[:sockets] << sched_socket
+end
+sched_dev[:channels] << sched_epn_chan
+
+
+
+
+
 ###################
 FLP_DATA_PORT = 20000
 flp_port_per_node = {} # track used data ports on each flp node
+flp_node_map = {}
 
 flp_config = []
 # create all flp devices
 NUM_FLP.times do | flp |
   flp_node = FLP_NODES[flp % NUM_FLP_NODES]
+  flp_node_map[flp] = { :node => flp_node, :data_ports => [] }
 
   # init used port for this node
   flp_port_per_node[flp_node] = FLP_DATA_PORT if flp_port_per_node[flp_node].nil?
@@ -100,26 +154,38 @@ NUM_FLP.times do | flp |
     epn_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
     epn_socket[:type] = "push"
     epn_socket[:method] = "bind"
-    epn_socket[:address] = "tcp://#{flp_node}:#{flp_port_per_node[flp_node]}"
+    epn_socket[:address] = "tcp://*:#{flp_port_per_node[flp_node]}"
+    flp_node_map[flp][:data_ports] << flp_port_per_node[flp_node]
     flp_port_per_node[flp_node] += 1
 
     flp_data_chan[:sockets] << epn_socket
   end
-
   flp_dev[:channels] << flp_data_chan
+
+  #  sched channel
+  flp_sched_chan = Marshal.load(Marshal.dump(CHAN_HASH))
+  flp_sched_chan[:name] = "schedflp"
+  flp_sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
+  flp_sched_socket[:type] = "pull"
+  flp_sched_socket[:method] = "connect"
+  flp_sched_socket[:address] = "tcp://#{SCHED_NODE}:#{SCHED_FLP_PORT + flp}"
+
+  flp_sched_chan[:sockets] << flp_sched_socket
+  flp_dev[:channels] << flp_sched_chan
 
   flp_config << flp_dev
 end
 
 
 
-
 ###################
 
 epn_config = []
+epn_node_map = {}
 # create all flp devices
 NUM_EPN.times do | epn |
   epn_node = EPN_NODES[epn % NUM_EPN_NODES]
+  epn_node_map[epn] = epn_node
 
   # init used port for this node
   # flp_port_per_node[flp_node] = FLP_DATA_PORT if flp_port_per_node[flp_node].nil?
@@ -136,12 +202,23 @@ NUM_EPN.times do | epn |
     flp_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
     flp_socket[:type] = "pull"
     flp_socket[:method] = "connect"
-    flp_socket[:address] = flp_config[flp][:channels][0][:sockets][epn][:address]
+    flp_socket[:address] = "tcp://#{flp_node_map[flp][:node]}:#{flp_node_map[flp][:data_ports][epn]}"
+    # flp_config[flp][:channels][0][:sockets][epn][:address]
 
     epn_data_chan[:sockets] << flp_socket
   end
-
   epn_dev[:channels] << epn_data_chan
+
+  #  sched channel
+  epn_sched_chan = Marshal.load(Marshal.dump(CHAN_HASH))
+  epn_sched_chan[:name] = "epnsched"
+  epn_sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
+  epn_sched_socket[:type] = "push"
+  epn_sched_socket[:method] = "connect"
+  epn_sched_socket[:address] = "tcp://#{SCHED_NODE}:#{SCHED_EPN_PORT + epn}"
+
+  epn_sched_chan[:sockets] << epn_sched_socket
+  epn_dev[:channels] << epn_sched_chan
 
   epn_config << epn_dev
 end
@@ -152,9 +229,64 @@ FAIRMQ_DEVS =
 {
   :fairMQOptions =>
   {
-    :devices => [ flp_config, epn_config ].flatten
+    :devices => [ sched_dev, flp_config, epn_config ].flatten
   }
 }
+
+
+spm_file_lines = [ ]
+# spm file
+sched_spm = [ SCHED_NODE, ":",
+  [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-scheduler",
+    "--id", "scheduler",
+    "--amountEPNs", ENV['TEST_AMOUNT_EPN'],
+    "--numEPNS", "#{NUM_EPN}",
+    "--numFLPS", "#{NUM_FLP}",
+    "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+    "--io-threads", "16",
+    "--control", "static"
+  ].shelljoin ].join(' ')
+
+spm_file_lines << sched_spm
+spm_file_lines << ""
+
+NUM_FLP.times do | flp |
+  flp_spm = [ flp_node_map[flp][:node] , ":",
+    [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-flp",
+      "--id", "flp#{flp}",
+      "--myId", "#{flp + 1}",
+      "--socket", "#{flp}",
+      "--amountEPNs", ENV['TEST_AMOUNT_EPN'],
+      "--numEPNS", "#{NUM_EPN}",
+      "--numFLPS", "#{NUM_FLP}",
+      "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+      "--io-threads", "8",
+      "--control", "static"
+    ].shelljoin
+  ].join(' ')
+
+  spm_file_lines << flp_spm
+end
+spm_file_lines << ""
+
+NUM_EPN.times do | epn |
+  epn_spm = [ epn_node_map[epn] , ":",
+    [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-epn",
+      "--id", "epn#{epn}",
+      "--myId", "#{epn + 1}",
+      "--maxSlots", "#{ENV['TEST_NUM_SLOTS']}",
+      "--numEPNS", "#{NUM_EPN}",
+      "--numFLPS", "#{NUM_FLP}",
+      "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+      "--io-threads", "8",
+      "--control", "static"
+    ].shelljoin
+  ].join(' ')
+
+  spm_file_lines << epn_spm
+end
+
+
 
 
 # pp flp_config
@@ -164,3 +296,7 @@ puts "\n---------- ✂︎ CUT HERE ----------\n"
 puts JSON.pretty_generate(FAIRMQ_DEVS)
 
 puts "\n---------- ✂︎ CUT HERE ----------\n"
+
+puts spm_file_lines.join("\n")
+
+
