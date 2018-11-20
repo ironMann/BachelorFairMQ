@@ -14,8 +14,6 @@
 
 using namespace std;
 
-#define FLPLOG(s) LOG(s) << "FLP[" << myId << "]: "
-
 namespace example_SCHEDULER_FLP_EPN
 {
 
@@ -27,6 +25,8 @@ flp::flp()
     , socket(0)
     , myId(0)
     , sTF(0)
+    , startTime(0)
+    , progTime(60*1*1000)
 
 {
 }
@@ -36,22 +36,31 @@ void flp::InitTask()
     amountEPNs = fConfig->GetValue<int>("amountEPNs");
     numEPNS= fConfig->GetValue<uint64_t>("numEPNS");
     socket = fConfig->GetValue<int>("socket");
-    FLPLOG(INFO)  << "socket number: "<< socket;
     myId = fConfig->GetValue<int>("myId");
     arrayofEpns = new int[amountEPNs];
+    startTime=getHistKey();
 }
 
 void flp::Run()
 {
     while (CheckCurrentState(RUNNING)) //
     {
+      if(getHistKey()-startTime>=progTime){
+        LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+        ChangeState("READY");
+        ChangeState("RESETTING_TASK");
+        ChangeState("DEVICE_READY");
+        ChangeState("RESETTING_DEVICE");
+        ChangeState("IDLE");
+        ChangeState("EXITING");
+      }
 
-
+      else{
             auto &myRecvChan = GetChannel("schedflp");
             //I expect this kind of message
             std::vector<uint64_t> msgIReceive (amountEPNs, 0);
             for(auto it: msgIReceive){
-              FLPLOG(INFO) <<it;
+              cout<<it<<endl;
             }
 
             //receive a message
@@ -63,9 +72,9 @@ void flp::Run()
             if(aMessage->GetSize() ==((sizeof(uint64_t))*amountEPNs)){
               int i=0;
               for(vector<uint64_t>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
-              FLPLOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
+              LOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
               arrayofEpns[i]=*iter;
-              FLPLOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
+              LOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
               i++;
 
 
@@ -77,8 +86,8 @@ void flp::Run()
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
-            FLPLOG(INFO)  << "arrayofEpns["<<i<<"]: " <<c;
-            FLPLOG(INFO) <<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF;
+            cout << "arrayofEpns["<<i<<"]: " <<c<<endl;
+            cout<<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF<< endl;
             auto &mySendingChan = GetChannel("data", (c-1));
             //the message I want to send
             FLPtoEPN MsgFlpEpn;
@@ -97,8 +106,24 @@ void flp::Run()
             }
 
 
-
+      }
     }
+}
+
+uint64_t flp::getHistKey(){
+    //get the current time
+    const auto time = std::chrono::high_resolution_clock::now();
+    //get the time from THEN to now
+    auto duration = time.time_since_epoch();
+    const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    //std::cout << "Milliseconds : " << millis << std::endl;
+    //determine the interval (key for the hist map)
+    const std::uint64_t intKey = millis / 1000 * 1000;
+    //cout<< "histKey : " << intKey << endl;
+
+    return intKey;
+
 }
 
 
