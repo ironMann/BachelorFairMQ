@@ -33,12 +33,12 @@ class scheduler : public FairMQDevice
     uint64_t numEPNS;
     uint64_t numFLPS;
     const unsigned intMs;
-    const unsigned aliveTimeMs;
+    const unsigned progTime;
     const unsigned historyMaxMs;
     std::vector<uint64_t>  sched;
 
        //constants to generate array sent to FLPs
-    const unsigned amountSubtimeframes; //the amount of subtimeframes the FLPs send to the EPNs per second
+    const unsigned msBetweenSubtimeframes; //the amount of subtimeframes the FLPs send to the EPNs per second
     uint64_t amountEPNs; //amount of EPNs that are in the array the Scheduler needs to send to the FLPs
     const float intervalFLPs; // the interval in seconds in which the scheduler needs to send array to all FLPs
 
@@ -51,6 +51,7 @@ class scheduler : public FairMQDevice
     uint64_t tooOld; //key which is tooOld (timestamp)
     uint64_t keyForToFile; // reference key for writing history to File
     uint64_t keyForGeneratingArray; //reference key for generating the array
+    uint64_t keyForExiting;
     uint64_t scheduleNumber;
     int m;
 
