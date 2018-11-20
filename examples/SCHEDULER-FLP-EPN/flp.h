@@ -30,10 +30,13 @@ class flp : public FairMQDevice
     int socket;
     int myId;
     int sTF;
+    uint64_t startTime;
+    const uint64_t progTime;
 
 
     virtual void Run();
     virtual void InitTask();
+    uint64_t getHistKey();
 };
 
 }
