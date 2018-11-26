@@ -44,6 +44,7 @@ class epn : public FairMQDevice
     const float procDev;
 
     uint64_t startTime;
+    uint64_t timeBetweenTf;
     const uint64_t programTimeMsec; //the duration of the program.
     const unsigned intMs;
 

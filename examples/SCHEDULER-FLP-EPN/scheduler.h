@@ -67,10 +67,13 @@ class scheduler : public FairMQDevice
     void update(uint64_t epnId, uint64_t myMem);
     void toFile();
     //what I want to return in this function is a pointer to the first element of the array
-    int* generateArray();
+    int* generateSchedule();
+    int* generateArray1();
     int maxSearch(int arr[]); // find the EPN with the most free memory, returns the index of the EPN with most free memory
     void printArrFLP(int arr[], int length);
     void printfreeSlots(int arr[], int length);
+    int availableEpns(int arr[]);
+    int EpnsInSchedule(int aE);
     std::vector<uint64_t> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
 
 

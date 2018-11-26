@@ -26,7 +26,7 @@ flp::flp()
     , myId(0)
     , sTF(0)
     , startTime(0)
-    , progTime(60*1*1000)
+    , progTime(60*2*1000)
 
 {
 }
@@ -59,9 +59,7 @@ void flp::Run()
             auto &myRecvChan = GetChannel("schedflp");
             //I expect this kind of message
             std::vector<uint64_t> msgIReceive (amountEPNs, 0);
-            for(auto it: msgIReceive){
-              cout<<it<<endl;
-            }
+
 
             //receive a message
             FairMQMessagePtr aMessage = myRecvChan.NewMessage();

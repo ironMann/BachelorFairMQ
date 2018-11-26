@@ -298,5 +298,3 @@ puts JSON.pretty_generate(FAIRMQ_DEVS)
 puts "\n---------- ✂︎ CUT HERE ----------\n"
 
 puts spm_file_lines.join("\n")
-
-

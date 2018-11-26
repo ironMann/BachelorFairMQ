@@ -11,6 +11,7 @@
 #include <random>
 #include <thread>
 #include <time.h>
+#include <fstream>
 
 
 
@@ -31,7 +32,8 @@ epn::epn()
     ,sTF(1)
     ,it()
     ,startTime(0)
-    ,programTimeMsec(1*60*1000)
+    ,timeBetweenTf(0)
+    ,programTimeMsec(2*60*1000)
     ,intMs(1000)
 
     {
@@ -42,6 +44,7 @@ void epn::InitTask()
 {
 
         startTime=getHistKey();
+        timeBetweenTf=getHistKey();
         Id = fConfig->GetValue<int>("myId");
         maxSlots = 4;
         freeSlots = maxSlots;
@@ -124,6 +127,12 @@ void epn::receive(){
 
           rcvdSTFs[messagei.sTF]++;
           if(rcvdSTFs[messagei.sTF] == numFLPS){
+            ofstream receptionOfTf;
+            receptionOfTf.open("TimebetweenReceptionOfTf.txt", std::ios_base::app);
+            receptionOfTf<< (getHistKey()-timeBetweenTf) << endl;
+            timeBetweenTf=getHistKey();
+
+
             LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
           /*
@@ -134,6 +143,7 @@ void epn::receive(){
           assert(rcvdSTFs[messagei.sTF] <= numFLPS);
 
           if(rcvdSTFs[messagei.sTF] == numFLPS){
+
             freeSlots--;
 
             if(freeSlots>=0) {
@@ -185,6 +195,9 @@ thread epn::senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* star
 void epn:: MyDelayedFun(float delayWork,int* memory){
      //(*memory)--;
      cout<<"amount of memory slots after decrementing: "<<*memory<<endl;
+     ofstream myfile;
+     myfile.open("processingTime.txt", std::ios_base::app);
+     myfile << delayWork << endl;
      std::this_thread::sleep_for(std::chrono::milliseconds(long  (delayWork*1000)));
      cout<<"Delayed thread executioning the work now! \n";
      (*memory)++;

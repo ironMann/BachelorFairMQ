@@ -24,8 +24,8 @@ scheduler::scheduler()
           ,numEPNS(0)
           ,numFLPS(0)
           ,intMs(1000) //one second
-          ,progTime(60*1*intMs)//alive time of the program
-          ,historyMaxMs(60*1*intMs)//one minute
+          ,progTime(60*2*intMs)//alive time of the program
+          ,historyMaxMs(60*1*intMs)//one minute - interval in which history will get written to file.
           ,sched()
           ,msBetweenSubtimeframes(2)
           ,amountEPNs(0)
@@ -74,12 +74,10 @@ bool scheduler::ConditionalRun()
       //}
 
         auto &myRecvChan = GetChannel("epnsched",i);
-        LOG(INFO)<<"Got channel";
         // I expect this kind of messages
         EPNtoScheduler msgFromSender;
         // receive a message
         FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-        LOG(INFO)<<"defined message pointer."; //put if statetement in here
         if((getHistKey()-keyForExiting)>progTime){
               LOG(INFO)<<"TERMINATING PROGRAM NOW!";
               ChangeState("READY");
@@ -91,10 +89,8 @@ bool scheduler::ConditionalRun()
             }
             else{
         myRecvChan.Receive(aMessage);
-        LOG(INFO)<<"received a message.";
         // get the data of the FairMQ message
         std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
-        LOG(INFO)<<"copied message into own...";
         if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
         LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
         update(msgFromSender.Id, msgFromSender.freeSlots);
@@ -106,7 +102,12 @@ bool scheduler::ConditionalRun()
     uint64_t localkey= getHistKey();
     if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<progTime)){
         //sched=simpleRRSched(m);
-        arrayForFlps = generateArray();
+        ofstream file, filem;
+        file.open("availableEpns.txt", std::ios_base::app);
+        file<<availableEpns(generateArray1())<<endl;
+        filem.open("EpnsInSchedule.txt",std::ios_base::app);
+        filem<<EpnsInSchedule(availableEpns(generateArray1()))<<endl;
+        arrayForFlps = generateSchedule();
         sched = vector<uint64_t> (amountEPNs,(uint64_t) 0);
         sched.assign(arrayForFlps, arrayForFlps+amountEPNs);
         //m=(m+amountEPNs)%numEPNS;
@@ -254,7 +255,6 @@ void scheduler::toFile(){
     ofstream myfile;
     myfile.open("heatdata.txt", std::ios_base::app);
     for(auto a = history.begin(); a != history.end(); a ++ ){
-        //myfile << (*a).first << " ";
         for(uint64_t i = 0; i < (numEPNS-1); i++){
             myfile << history[(*a).first].at(i).memVal << ", ";
 
@@ -264,20 +264,11 @@ void scheduler::toFile(){
 }
 
 
-int* scheduler::generateArray(){
-    int* temporaryStorage= new int[amountEPNs]; //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
+int* scheduler::generateSchedule(){
+    int* temporaryStorage= generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
     int* desFLPsPointer = new int[amountEPNs]; // pointer to the array which the function will give back and contains the IDs of the EPNs that the FLPs need to send their subtimeframes to, beginning from the lowest ID and then in ascending order...
-    auto latestKey = history.rbegin();
-    //checking whether the EPNs are valid
-    for(uint64_t i = 0; i < numEPNS; i++){
-        if((*latestKey).first == history[(*latestKey).first].at(i).ts){
-            temporaryStorage[i]= history[(*latestKey).first].at(i).memVal; //writing the memory values of the valid EPns in array
-        }
-        else{ //setting the other values to -1
-            temporaryStorage[i]=-1;
-        }
-    }
-    printfreeSlots(temporaryStorage, 1);
+
+    //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
     for(uint64_t i = 0; i < numEPNS; i++){
         int maxIndex = maxSearch(temporaryStorage);
@@ -289,6 +280,24 @@ int* scheduler::generateArray(){
         delete[] temporaryStorage;
     if(desFLPsPointer)
         delete[] desFLPsPointer;
+}
+
+int* scheduler::generateArray1(){
+  int*temporaryStorage=new int[numEPNS];
+
+  auto latestKey = history.rbegin();
+  //checking whether the EPNs are valid
+  for(uint64_t i = 0; i < numEPNS; i++){
+      if((*latestKey).first == history[(*latestKey).first].at(i).ts){
+          temporaryStorage[i]= history[(*latestKey).first].at(i).memVal; //writing the memory values of the valid EPns in array
+      }
+      else{ //setting the other values to -1
+          temporaryStorage[i]=-1;
+      }
+  }
+  return temporaryStorage;
+  if(temporaryStorage)
+    delete[] temporaryStorage;
 }
 
 int scheduler::maxSearch(int arr[]){
@@ -324,11 +333,8 @@ void scheduler::printfreeSlots(int arr[], int length){
 
 
 void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
-    cout<<"inside sending!"<<endl;
     cout<<"number of FLPS: "<< (*num) << endl;
     for(uint64_t i=0; i<(*num); i++){
-      cout<<"inside forloop for sending!"<<endl;
-      cout<<"I: "<< i << endl;
       auto &mySendingChan = GetChannel("schedflp", i);
 
       FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*(*numE));
@@ -344,6 +350,26 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
 
 
     }
+}
+
+int scheduler::availableEpns(int arr[]){
+  int c=0;
+  for(uint64_t i=0;i<numEPNS;i++){
+    if(arr[i]>0){
+      c++;
+    }
+  }
+  return c;
+}
+
+
+int scheduler::EpnsInSchedule(int aE){
+  if(aE>=amountEPNs){
+    return amountEPNs;
+  }
+  else{
+    return aE;
+  }
 }
 
 std::vector<uint64_t> scheduler::simpleRRSched(int m){
