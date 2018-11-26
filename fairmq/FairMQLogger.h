@@ -9,6 +9,6 @@
 #ifndef FAIRMQLOGGER_H_
 #define FAIRMQLOGGER_H_
 
-#include <fairlogger/Logger.h>
+#include </home/charlotte/fairmq/FairLogger/logger/Logger.h>
 
 #endif /* FAIRMQLOGGER_H_ */

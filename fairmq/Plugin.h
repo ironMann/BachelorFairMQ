@@ -9,10 +9,10 @@
 #ifndef FAIR_MQ_PLUGIN_H
 #define FAIR_MQ_PLUGIN_H
 
-#include <fairmq/Tools.h>
-#include <fairmq/PluginServices.h>
+#include </home/charlotte/fairmq/fairmq/Tools.h>
+#include </home/charlotte/fairmq/fairmq/PluginServices.h>
 
-#include <boost/dll/alias.hpp>
+#include </home/charlotte/fairmq/boost/boost/dll/alias.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 

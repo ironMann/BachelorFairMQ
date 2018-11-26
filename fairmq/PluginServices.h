@@ -9,9 +9,9 @@
 #ifndef FAIR_MQ_PLUGINSERVICES_H
 #define FAIR_MQ_PLUGINSERVICES_H
 
-#include <fairmq/Tools.h>
-#include <FairMQDevice.h>
-#include <options/FairMQProgOptions.h>
+#include </home/charlotte/fairmq/fairmq/Tools.h>
+#include </home/charlotte/fairmq/fairmq/FairMQDevice.h>
+#include </home/charlotte/fairmq/fairmq/options/FairMQProgOptions.h>
 
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>

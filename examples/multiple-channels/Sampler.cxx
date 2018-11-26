@@ -33,15 +33,15 @@ Sampler::Sampler()
 
 void Sampler::InitTask()
 {
-    fText = fConfig->GetValue<string>("text");
+    fText = fConfig->GetValue<string>("text"); //this is the text of the message that will be sent
     fMaxIterations = fConfig->GetValue<uint64_t>("max-iterations");
 }
 
 void Sampler::Run()
 {
-    FairMQPollerPtr poller(NewPoller("data", "broadcast"));
+    FairMQPollerPtr poller(NewPoller("data", "broadcast")); //here we have a multiplexer that is channeling between all channels, we call it poller and we have two channels one where we send and one where we receive data
 
-    while (CheckCurrentState(RUNNING))
+    while (CheckCurrentState(RUNNING)) //
     {
         poller->Poll(100);
 

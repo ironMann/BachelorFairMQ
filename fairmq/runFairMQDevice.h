@@ -6,7 +6,7 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#include <fairmq/DeviceRunner.h>
+#include </home/charlotte/fairmq/fairmq/DeviceRunner.h>
 #include <boost/program_options.hpp>
 #include <memory>
 #include <string>

@@ -14,7 +14,7 @@ using namespace std;
 
 namespace example_1_n_1
 {
-
+//separates the class Processor from the constructor Processor()
 Processor::Processor()
 {
     OnData("data1", &Processor::HandleData);

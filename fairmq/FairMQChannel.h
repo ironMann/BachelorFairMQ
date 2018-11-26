@@ -15,12 +15,12 @@
 #include <atomic>
 #include <mutex>
 
-#include <FairMQTransportFactory.h>
-#include <FairMQSocket.h>
-#include <fairmq/Transports.h>
-#include <FairMQLogger.h>
-#include <FairMQParts.h>
-#include <FairMQMessage.h>
+#include </home/charlotte/fairmq/fairmq/FairMQTransportFactory.h>
+#include </home/charlotte/fairmq/fairmq/FairMQSocket.h>
+#include </home/charlotte/fairmq/fairmq/Transports.h>
+#include </home/charlotte/fairmq/fairmq/FairMQLogger.h>
+#include </home/charlotte/fairmq/fairmq/FairMQParts.h>
+#include </home/charlotte/fairmq/fairmq/FairMQMessage.h>
 
 class FairMQChannel
 {

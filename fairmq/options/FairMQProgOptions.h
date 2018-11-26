@@ -9,10 +9,10 @@
 #ifndef FAIRMQPROGOPTIONS_H
 #define FAIRMQPROGOPTIONS_H
 
-#include <fairmq/EventManager.h>
-#include "FairMQLogger.h"
-#include "FairMQChannel.h"
-#include <fairmq/Tools.h>
+#include </home/charlotte/fairmq/fairmq/EventManager.h>
+#include </home/charlotte/fairmq/fairmq/FairMQLogger.h>
+#include </home/charlotte/fairmq/fairmq/FairMQChannel.h>
+#include </home/charlotte/fairmq/fairmq/Tools.h>
 
 #include <boost/program_options.hpp>
 

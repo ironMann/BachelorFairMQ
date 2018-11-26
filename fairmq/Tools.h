@@ -10,13 +10,13 @@
 #define FAIR_MQ_TOOLS_H
 
 // IWYU pragma: begin_exports
-#include <fairmq/tools/CppSTL.h>
-#include <fairmq/tools/Network.h>
-#include <fairmq/tools/Process.h>
-#include <fairmq/tools/RateLimit.h>
-#include <fairmq/tools/Strings.h>
-#include <fairmq/tools/Unique.h>
-#include <fairmq/tools/Version.h>
+#include </home/charlotte/fairmq/fairmq/tools/CppSTL.h>
+#include </home/charlotte/fairmq/fairmq/tools/Network.h>
+#include </home/charlotte/fairmq/fairmq/tools/Process.h>
+#include </home/charlotte/fairmq/fairmq/tools/RateLimit.h>
+#include </home/charlotte/fairmq/fairmq/tools/Strings.h>
+#include </home/charlotte/fairmq/fairmq/tools/Unique.h>
+#include </home/charlotte/fairmq/fairmq/tools/Version.h>
 // IWYU pragma: end_exports
 
 #endif // FAIR_MQ_TOOLS_H
