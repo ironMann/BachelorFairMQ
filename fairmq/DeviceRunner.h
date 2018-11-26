@@ -9,11 +9,11 @@
 #ifndef FAIR_MQ_DEVICERUNNER_H
 #define FAIR_MQ_DEVICERUNNER_H
 
-#include </home/charlotte/fairmq/fairmq/EventManager.h>
-#include </home/charlotte/fairmq/fairmq/PluginManager.h>
-#include </home/charlotte/fairmq/fairmq/FairMQDevice.h>
-#include </home/charlotte/fairmq/fairmq/FairMQLogger.h>
-#include </home/charlotte/fairmq/fairmq/options/FairMQProgOptions.h>
+#include <fairmq/EventManager.h>
+#include <fairmq/PluginManager.h>
+#include <FairMQDevice.h>
+#include <FairMQLogger.h>
+#include <options/FairMQProgOptions.h>
 
 #include <functional>
 #include <memory>

@@ -9,17 +9,17 @@
 #ifndef FAIRMQDEVICE_H_
 #define FAIRMQDEVICE_H_
 
-#include </home/charlotte/fairmq/fairmq/FairMQStateMachine.h>
-#include </home/charlotte/fairmq/fairmq/FairMQTransportFactory.h>
-#include </home/charlotte/fairmq/fairmq/Transports.h>
+#include <FairMQStateMachine.h>
+#include <FairMQTransportFactory.h>
+#include <fairmq/Transports.h>
 
-#include </home/charlotte/fairmq/fairmq/FairMQSocket.h>
-#include </home/charlotte/fairmq/fairmq/FairMQChannel.h>
-#include </home/charlotte/fairmq/fairmq/FairMQMessage.h>
-#include </home/charlotte/fairmq/fairmq/FairMQParts.h>
-#include </home/charlotte/fairmq/fairmq/FairMQUnmanagedRegion.h>
-#include </home/charlotte/fairmq/fairmq/FairMQLogger.h>
-#include </home/charlotte/fairmq/fairmq/options/FairMQProgOptions.h>
+#include <FairMQSocket.h>
+#include <FairMQChannel.h>
+#include <FairMQMessage.h>
+#include <FairMQParts.h>
+#include <FairMQUnmanagedRegion.h>
+#include <FairMQLogger.h>
+#include <options/FairMQProgOptions.h>
 
 #include <vector>
 #include <memory> // unique_ptr
@@ -29,13 +29,13 @@
 #include <iostream>
 #include <unordered_map>
 #include <functional>
-#include <assert.h> // static_asserty
+#include <assert.h> // static_assert
 #include <type_traits> // is_trivially_copyable
 
 #include <mutex>
 #include <condition_variable>
 
-#include </home/charlotte/fairmq/fairmq/Tools.h>
+#include <fairmq/Tools.h>
 
 using FairMQChannelMap = std::unordered_map<std::string, std::vector<FairMQChannel>>;
 

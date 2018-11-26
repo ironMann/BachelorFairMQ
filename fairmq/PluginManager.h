@@ -9,18 +9,18 @@
 #ifndef FAIR_MQ_PLUGINMANAGER_H
 #define FAIR_MQ_PLUGINMANAGER_H
 
-#include </home/charlotte/fairmq/fairmq/Plugin.h>
-#include </home/charlotte/fairmq/fairmq/PluginServices.h>
-#include </home/charlotte/fairmq/fairmq/Tools.h>
-#include </home/charlotte/fairmq/fairmq/FairMQDevice.h>
+#include <fairmq/Plugin.h>
+#include <fairmq/PluginServices.h>
+#include <fairmq/Tools.h>
+#include <FairMQDevice.h>
 #define BOOST_FILESYSTEM_VERSION 3
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
-#include </home/charlotte/fairmq/boost/boost/dll/import.hpp>
-#include </home/charlotte/fairmq/boost/boost/dll/shared_library.hpp>
-#include </home/charlotte/fairmq/boost/boost/dll/runtime_symbol_info.hpp>
+#include <boost/dll/import.hpp>
+#include <boost/dll/shared_library.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 #include <functional>
 #include <map>
 #include <memory>

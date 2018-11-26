@@ -9,12 +9,12 @@
 #ifndef FAIRMQTRANSPORTFACTORY_H_
 #define FAIRMQTRANSPORTFACTORY_H_
 
-#include </home/charlotte/fairmq/fairmq/FairMQMessage.h>
-#include </home/charlotte/fairmq/fairmq/FairMQSocket.h>
-#include </home/charlotte/fairmq/fairmq/FairMQPoller.h>
-#include </home/charlotte/fairmq/fairmq/FairMQUnmanagedRegion.h>
-#include </home/charlotte/fairmq/fairmq/FairMQLogger.h>
-#include </home/charlotte/fairmq/fairmq/Transports.h>
+#include <FairMQMessage.h>
+#include <FairMQSocket.h>
+#include <FairMQPoller.h>
+#include <FairMQUnmanagedRegion.h>
+#include <FairMQLogger.h>
+#include <fairmq/Transports.h>
 
 #include <string>
 #include <memory>

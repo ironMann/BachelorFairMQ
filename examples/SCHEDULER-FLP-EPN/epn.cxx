@@ -33,7 +33,7 @@ epn::epn()
     ,it()
     ,startTime(0)
     ,timeBetweenTf(0)
-    ,programTimeMsec(2*60*1000)
+    ,programTimeMsec(20*60*1000)
     ,intMs(1000)
 
     {
@@ -42,9 +42,8 @@ epn::epn()
 
 void epn::InitTask()
 {
-
+	timeBetweenTf=getHistKey();
         startTime=getHistKey();
-        timeBetweenTf=getHistKey();
         Id = fConfig->GetValue<int>("myId");
         maxSlots = 4;
         freeSlots = maxSlots;
@@ -84,12 +83,10 @@ uint64_t epn::getHistKey(){
     //get the time from THEN to now
     auto duration = time.time_since_epoch();
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
     //std::cout << "Milliseconds : " << millis << std::endl;
     //determine the interval (key for the hist map)
     const std::uint64_t intKey = millis / intMs * intMs;
     //cout<< "histKey : " << intKey << endl;
-
     return intKey;
 
 }
@@ -131,8 +128,6 @@ void epn::receive(){
             receptionOfTf.open("TimebetweenReceptionOfTf.txt", std::ios_base::app);
             receptionOfTf<< (getHistKey()-timeBetweenTf) << endl;
             timeBetweenTf=getHistKey();
-
-
             LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
           /*
@@ -210,6 +205,7 @@ float epn:: getDelay(){
      cout<<"Delay work for:" << delay <<"seconds\n";
      return delay;
 }
+
 
 
 

@@ -47,24 +47,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-SET (BOOST_ROOT "/home/charlotte/fairmq/boost")
-SET (BOOST_LIBRARYDIR "/home/charlotte/fairmq/boost/lib")
-
-SET (BOOST_MIN_VERSION "1.55.0")
-set (Boost_NO_BOOST_CMAKE ON)
-FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} REQUIRED)
-if (NOT Boost_FOUND)
-  message(FATAL_ERROR "Fatal error: Boost (version >= 1.55) required.")
-else()
-  message(STATUS "Setting up BOOST")
-  message(STATUS " Includes - ${Boost_INCLUDE_DIRS}")
-  message(STATUS " Library  - ${Boost_LIBRARY_DIRS}")
-  include_directories(${Boost_INCLUDE_DIRS})
-  link_directories(${Boost_LIBRARY_DIRS})
-endif (NOT Boost_FOUND)
-
 if(BUILD_FAIRMQ)
-
   find_package2(PUBLIC Boost VERSION 1.64 REQUIRED
     COMPONENTS program_options thread system filesystem regex date_time signals
   )

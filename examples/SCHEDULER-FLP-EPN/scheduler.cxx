@@ -24,8 +24,8 @@ scheduler::scheduler()
           ,numEPNS(0)
           ,numFLPS(0)
           ,intMs(1000) //one second
-          ,progTime(60*2*intMs)//alive time of the program
-          ,historyMaxMs(60*1*intMs)//one minute - interval in which history will get written to file.
+          ,progTime(60*1*intMs)//alive time of the program
+          ,historyMaxMs(60*20*intMs)//one minute
           ,sched()
           ,msBetweenSubtimeframes(2)
           ,amountEPNs(0)
@@ -270,7 +270,7 @@ int* scheduler::generateSchedule(){
 
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
-    for(uint64_t i = 0; i < numEPNS; i++){
+    for(uint64_t i = 0; i < amountEPNs; i++){
         int maxIndex = maxSearch(temporaryStorage);
         desFLPsPointer[i]=maxIndex; //index of the EPNs with most memory capacity
     }

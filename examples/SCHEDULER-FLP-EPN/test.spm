@@ -1,9 +1,0 @@
-pn40: netcat -l 25572
-
-pn15: netcat -l 25572
-pn16: netcat -l 25572
-pn17: netcat -l 25572
-
-pn18: netcat -l 25572
-pn19: netcat -l 25572
-pn20: netcat -l 25572
