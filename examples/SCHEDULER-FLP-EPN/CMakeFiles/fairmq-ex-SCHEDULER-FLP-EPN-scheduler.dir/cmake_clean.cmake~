@@ -1,0 +1,10 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/fairmq-ex-multiple-channels-scheduler.dir/runScheduler.cxx.o"
+  "fairmq-ex-multiple-channels-scheduler.pdb"
+  "fairmq-ex-multiple-channels-scheduler"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/fairmq-ex-multiple-channels-scheduler.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

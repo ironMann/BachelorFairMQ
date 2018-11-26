@@ -1,0 +1,2 @@
+/usr/bin/ar qc libExampleMultipleChannelsLib.a  CMakeFiles/ExampleMultipleChannelsLib.dir/flp.cxx.o CMakeFiles/ExampleMultipleChannelsLib.dir/scheduler.cxx.o CMakeFiles/ExampleMultipleChannelsLib.dir/epn.cxx.o
+/usr/bin/ranlib libExampleMultipleChannelsLib.a

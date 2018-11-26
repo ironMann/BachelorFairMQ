@@ -1,0 +1,20 @@
+#!/bin/bash
+
+export FAIRMQ_PATH=@FAIRMQ_BIN_DIR@
+
+FLP="fairmq-ex-SCHEDULER-FLP-EPN-flp"
+FLP+=" --id flp1"
+FLP+=" --channel-config name=data,type=push,method=bind,rateLogging=0,address=tcp://*:5555"
+FLP+="                  name=broadcast,type=sub,method=connect,rateLogging=0,address=tcp://localhost:5005"
+xterm -geometry 80x23+0+0 -hold -e @EX_BIN_DIR@/$FLP &
+
+EPN="fairmq-ex-SCHEDULER-FLP-EPN-epn"
+EPN+=" --id epn1"
+EPN+=" --channel-config name=data,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5555"
+EPN+="                  name=broadcast,type=sub,method=connect,rateLogging=0,address=tcp://localhost:5005"
+xterm -geometry 80x23+500+0 -hold -e @EX_BIN_DIR@/$EPN &
+
+SCHEDULER="fairmq-ex-SCHEDULER-FLP-EPN-scheduler"
+SCHEDULER+=" --id scheduler1"
+SCHEDULER+=" --channel-config name=broadcast,type=pub,method=bind,rateLogging=0,address=tcp://*:5005"
+xterm -geometry 80x23+250+330 -hold -e @EX_BIN_DIR@/$SCHEDULER &

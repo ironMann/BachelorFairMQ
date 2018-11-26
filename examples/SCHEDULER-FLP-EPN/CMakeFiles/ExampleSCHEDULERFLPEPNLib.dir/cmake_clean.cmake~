@@ -1,0 +1,12 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/ExampleMultipleChannelsLib.dir/flp.cxx.o"
+  "CMakeFiles/ExampleMultipleChannelsLib.dir/scheduler.cxx.o"
+  "CMakeFiles/ExampleMultipleChannelsLib.dir/epn.cxx.o"
+  "libExampleMultipleChannelsLib.pdb"
+  "libExampleMultipleChannelsLib.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/ExampleMultipleChannelsLib.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

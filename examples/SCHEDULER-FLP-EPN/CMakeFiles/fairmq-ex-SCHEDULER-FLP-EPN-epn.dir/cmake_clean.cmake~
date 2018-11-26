@@ -1,0 +1,10 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/fairmq-ex-multiple-channels-epn.dir/runEpn.cxx.o"
+  "fairmq-ex-multiple-channels-epn.pdb"
+  "fairmq-ex-multiple-channels-epn"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/fairmq-ex-multiple-channels-epn.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
