@@ -133,7 +133,6 @@ bool scheduler::ConditionalRun()
 
 
     return true;
-
   }
 }
 
@@ -287,8 +286,8 @@ int* scheduler::generateArray1(){
 
   auto latestKey = history.rbegin();
   //checking whether the EPNs are valid
-  for(uint64_t i = 0; i < numEPNS; i++){
-      if((*latestKey).first == history[(*latestKey).first].at(i).ts){
+  for(uint64_t i = 0; i < numEPNS; i++){ (*latestKey).first
+      if((history[(*latestKey).first].at(i).ts) + 5000 >= (*latestKey).first){
           temporaryStorage[i]= history[(*latestKey).first].at(i).memVal; //writing the memory values of the valid EPns in array
       }
       else{ //setting the other values to -1

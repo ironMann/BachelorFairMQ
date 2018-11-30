@@ -2,7 +2,11 @@
 
 export FAIRMQ_PATH=/home/charlotte/fairmq/fairmq
 
+<<<<<<< Updated upstream
 SchedulerFlpEpnconfig="/home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/ex-SCHEDULER-FLP-EPN.json"
+=======
+SchedulerFlpEpnconfig="/home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/conf.json"
+>>>>>>> Stashed changes
 
 FLP1="fairmq-ex-SCHEDULER-FLP-EPN-flp"
 FLP1+=" --id flp1"
@@ -14,7 +18,11 @@ FLP1+=" --myId 1"
 FLP1+=" --mq-config $SchedulerFlpEpnconfig"
 #FLP+=" --channel-config name=schedflp,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5557"
 #FLP+="                  name=data1,type=push,method=bind,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$FLP1 &
+=======
+xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$FLP1 &
+>>>>>>> Stashed changes
 
 FLP2="fairmq-ex-SCHEDULER-FLP-EPN-flp"
 FLP2+=" --id flp2"
@@ -26,7 +34,11 @@ FLP2+=" --myId 2"
 FLP2+=" --mq-config $SchedulerFlpEpnconfig"
 #FLP+=" --channel-config name=schedflp,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5557"
 #FLP+="                  name=data1,type=push,method=bind,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$FLP2 &
+=======
+xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$FLP2 &
+>>>>>>> Stashed changes
 
 FLP3="fairmq-ex-SCHEDULER-FLP-EPN-flp"
 FLP3+=" --id flp3"
@@ -38,7 +50,11 @@ FLP3+=" --myId 3"
 FLP3+=" --mq-config $SchedulerFlpEpnconfig"
 #FLP+=" --channel-config name=schedflp,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5557"
 #FLP+="                  name=data1,type=push,method=bind,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$FLP3 &
+=======
+xterm -geometry 80x23+0+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$FLP3 &
+>>>>>>> Stashed changes
 
 EPN1="fairmq-ex-SCHEDULER-FLP-EPN-epn"
 EPN1+=" --id epn1"
@@ -50,7 +66,11 @@ EPN1+=" --numFLPS 3"
 EPN1+=" --mq-config $SchedulerFlpEpnconfig"
 #EPN1+=" --channel-config name=epnsched,type=push,method=bind,rateLogging=0,address=tcp://localhost:5555"
 #EPN1+=" --channel-config name=data1,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$EPN1 &
+=======
+xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$EPN1 &
+>>>>>>> Stashed changes
 
 EPN2="fairmq-ex-SCHEDULER-FLP-EPN-epn"
 EPN2+=" --id epn2"
@@ -62,7 +82,11 @@ EPN2+=" --numFLPS 3"
 EPN2+=" --mq-config $SchedulerFlpEpnconfig"
 #EPN2+=" --channel-config name=epnsched,type=push,method=bind,rateLogging=0,address=tcp://localhost:5555"
 #EPN2+=" --channel-config name=data1,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$EPN2 &
+=======
+xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$EPN2 &
+>>>>>>> Stashed changes
 
 EPN3="fairmq-ex-SCHEDULER-FLP-EPN-epn"
 EPN3+=" --id epn3"
@@ -74,7 +98,11 @@ EPN3+=" --numFLPS 3"
 EPN3+=" --mq-config $SchedulerFlpEpnconfig"
 #EPN3+=" --channel-config name=epnsched,type=push,method=bind,rateLogging=0,address=tcp://localhost:5555"
 #EPN3+=" --channel-config name=data1,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5556"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$EPN3 &
+=======
+xterm -geometry 80x23+500+0 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$EPN3 &
+>>>>>>> Stashed changes
 
 
 
@@ -87,4 +115,8 @@ SCHEDULER+=" --amountEPNs 3"
 SCHEDULER+=" --mq-config $SchedulerFlpEpnconfig"
 #SCHEDULER+=" --channel-config name=epnsched,type=pull,method=connect,rateLogging=0,address=tcp://localhost:5555"
 #SCHEDULER+=" --channel-config name=schedflp,type=push,method=bind,rateLogging=0,address=tcp://localhost:5557"
+<<<<<<< Updated upstream
 xterm -geometry 80x23+250+330 -hold -e /home/charlotte/fairmq/examples/SCHEDULER-FLP-EPN/$SCHEDULER &
+=======
+xterm -geometry 80x23+250+330 -hold -e /home/charlotte/fairmq_build/examples/SCHEDULER-FLP-EPN/$SCHEDULER &
+>>>>>>> Stashed changes
