@@ -244,6 +244,7 @@ sched_spm = [ SCHED_NODE, ":",
     "--numFLPS", "#{NUM_FLP}",
     "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
     "--io-threads", "16",
+    "--network-interface", "ib0",
     "--control", "static"
   ].shelljoin ].join(' ')
 
@@ -261,6 +262,7 @@ NUM_FLP.times do | flp |
       "--numFLPS", "#{NUM_FLP}",
       "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
       "--io-threads", "8",
+      "--network-interface", "ib0",
       "--control", "static"
     ].shelljoin
   ].join(' ')
@@ -279,6 +281,7 @@ NUM_EPN.times do | epn |
       "--numFLPS", "#{NUM_FLP}",
       "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
       "--io-threads", "8",
+      "--network-interface", "ib0",
       "--control", "static"
     ].shelljoin
   ].join(' ')
