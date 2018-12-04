@@ -12,6 +12,7 @@
 #include <thread>
 #include <time.h>
 #include <fstream>
+#include <sstream>
 
 
 
@@ -24,17 +25,21 @@ epn::epn()
     : Id(0)
     , freeSlots(0)
     , maxSlots(4)
-    , numEPNS(0)
+    , numEPNS()
     , numFLPS(0)
+    , rcvdSTFs()
+    , it()
+    , sTF(1)
     , procTime(10)
-    , procDev(3)
-    ,rcvdSTFs()
-    ,sTF(1)
-    ,it()
-    ,startTime(0)
+    , procDev(1)
+    , startTime(0)
     ,timeBetweenTf(0)
-    ,programTimeMsec(20*60*1000)
+    ,programTime(0)
     ,intMs(1000)
+    ,receptionOfTf1()
+    ,processingTime1()
+
+
 
     {
     static_assert(std::is_pod<EPNtoScheduler>::value==true, "my struct  is not pod");
@@ -49,16 +54,58 @@ void epn::InitTask()
         freeSlots = maxSlots;
         numEPNS = fConfig->GetValue<uint64_t>("numEPNS");
         numFLPS = fConfig->GetValue<uint64_t>("numFLPS");
-        std::thread th1 = senderThread(&freeSlots, &numEPNS, &Id, &startTime, &programTimeMsec);
+        programTime = fConfig->GetValue<uint64_t>("programTime");
+        programTime=programTime*60*1000;
+        std::thread th1 = senderThread(&freeSlots, &numEPNS, &Id, &startTime, &programTime);
         th1.detach();
+
 
     }
 
 
 bool epn::ConditionalRun()
 {
+
   uint64_t currentTime=getHistKey();
-  if(currentTime-startTime>=programTimeMsec){
+  if(currentTime-startTime>=programTime){
+    ofstream receptionOfTf, processingTime;
+    static stringstream* all[3];
+
+    all[Id-1]=&receptionOfTf1;
+
+      receptionOfTf.open("TimebetweenReceptionOfTf.txt", std::ios_base::app);
+      for (uint64_t a=0; a < numEPNS; a++){
+        if(a==(Id-1)){
+          LOG(INFO)<< ((*(all[a])).str());
+          receptionOfTf<< ((*(all[a])).str());
+          }
+        else{
+          std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
+
+        }
+    }
+
+
+    static stringstream* all1[3];
+    //string reception = receptionOfTf1.str();
+    //cout<<reception<<endl;
+    all1[Id-1]=&processingTime1;
+    processingTime.open("processingTime.txt", std::ios_base::app);
+      for (uint64_t a=0; a < numEPNS; a++){
+        if(a==(Id-1)){
+          LOG(INFO)<< ((*(all1[a])).str());
+          processingTime<< ((*(all1[a])).str());
+          }
+        else{
+          std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
+
+        }
+    }
+
+
+
+
+
     LOG(INFO)<<"TERMINATING PROGRAM NOW!";
     ChangeState("READY");
     ChangeState("RESETTING_TASK");
@@ -76,6 +123,8 @@ bool epn::ConditionalRun()
 
 
 }
+
+
 
 uint64_t epn::getHistKey(){
     //get the current time
@@ -124,9 +173,7 @@ void epn::receive(){
 
           rcvdSTFs[messagei.sTF]++;
           if(rcvdSTFs[messagei.sTF] == numFLPS){
-            ofstream receptionOfTf;
-            receptionOfTf.open("TimebetweenReceptionOfTf.txt", std::ios_base::app);
-            receptionOfTf<< (getHistKey()-timeBetweenTf) << endl;
+            receptionOfTf1<< (getHistKey()-timeBetweenTf) <<skipws<< endl;
             timeBetweenTf=getHistKey();
             LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
@@ -144,7 +191,7 @@ void epn::receive(){
             if(freeSlots>=0) {
               float x = getDelay();
               LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
-              std::thread t3(MyDelayedFun, x, &freeSlots);
+              std::thread t3(MyDelayedFun, x, &freeSlots, &processingTime1);
               t3.detach();
             } else {
               LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
@@ -159,7 +206,7 @@ void epn::receive(){
 
 
 
-void epn::send(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max){
+void epn::send(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max){
   //change the sending
         uint64_t now=getHistKey();
         while((now-(*start))< *max){
@@ -179,7 +226,7 @@ void epn::send(int* memory, uint64_t* numepns, int* id, uint64_t* start,const ui
 
 }
 
-thread epn::senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max) {
+thread epn::senderThread(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max) {
           return std::thread([=] {
           this->send(memory,numepns,id,start, max);
           });
@@ -187,12 +234,10 @@ thread epn::senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* star
           // return std::thread(&epn::send, this, memory,numepns,id);
       }
 
-void epn:: MyDelayedFun(float delayWork,int* memory){
+void epn:: MyDelayedFun(float delayWork,int* memory, std::stringstream* procTime){
      //(*memory)--;
      cout<<"amount of memory slots after decrementing: "<<*memory<<endl;
-     ofstream myfile;
-     myfile.open("processingTime.txt", std::ios_base::app);
-     myfile << delayWork << endl;
+     (*procTime) << delayWork << endl;
      std::this_thread::sleep_for(std::chrono::milliseconds(long  (delayWork*1000)));
      cout<<"Delayed thread executioning the work now! \n";
      (*memory)++;

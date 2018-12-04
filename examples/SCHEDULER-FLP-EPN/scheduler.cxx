@@ -13,6 +13,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -24,19 +25,22 @@ scheduler::scheduler()
           ,numEPNS(0)
           ,numFLPS(0)
           ,intMs(1000) //one second
-          ,progTime(60*1*intMs)//alive time of the program
-          ,historyMaxMs(60*20*intMs)//one minute
-          ,sched()
+          ,programTime(0)//alive time of the program
+          ,historyMaxMs(60*1*intMs)//one minute
           ,msBetweenSubtimeframes(2)
           ,amountEPNs(0)
           ,intervalFLPs(0.5)
-          ,arrayForFlps(0)
+          ,vectorForFlps(0)
+          ,availableEpns1()
+          ,EpnsInSchedule1()
+          ,heatdata1()
           ,tooOld(0)
           ,keyForToFile(0)
           ,keyForGeneratingArray(0)
           ,keyForExiting(0)
           ,scheduleNumber(0)
           ,m(1) //what the hell is m for? It's for the round robin thing
+
 {
 }
 
@@ -44,12 +48,13 @@ void scheduler::InitTask(){
     numEPNS = fConfig->GetValue<uint64_t>("numEPNS");
     numFLPS=fConfig->GetValue<uint64_t>("numFLPS");
     amountEPNs=fConfig->GetValue<uint64_t>("amountEPNs");
+    programTime=fConfig->GetValue<uint64_t>("programTime");
     keyForToFile = getHistKey();
     keyForGeneratingArray=getHistKey();
     keyForExiting=getHistKey();
     initialize(numEPNS);
     printHist();
-    arrayForFlps = new int[amountEPNs];
+
 
 }
 
@@ -58,7 +63,15 @@ bool scheduler::ConditionalRun()
 {
   //FairMQPollerPtr poller(NewPoller("epnsched"));
   //poller->Poll(1000);
-    if((getHistKey()-keyForExiting)>progTime){
+    if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
+      ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
+      ofHeatdata.open("heatdata.txt", std::ios_base::app);
+      ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
+      ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
+      ofHeatdata<<heatdata1.rdbuf();
+      ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
+      ofAvailableEpns<<availableEpns1.rdbuf();
+
       LOG(INFO)<<"TERMINATING PROGRAM NOW!";
       ChangeState("READY");
       ChangeState("RESETTING_TASK");
@@ -78,7 +91,14 @@ bool scheduler::ConditionalRun()
         EPNtoScheduler msgFromSender;
         // receive a message
         FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-        if((getHistKey()-keyForExiting)>progTime){
+        if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
+              ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
+              ofHeatdata.open("heatdata.txt", std::ios_base::app);
+              ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
+              ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
+              ofHeatdata<<heatdata1.rdbuf();
+              ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
+              ofAvailableEpns<<availableEpns1.rdbuf();
               LOG(INFO)<<"TERMINATING PROGRAM NOW!";
               ChangeState("READY");
               ChangeState("RESETTING_TASK");
@@ -94,32 +114,35 @@ bool scheduler::ConditionalRun()
         if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
         LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
         update(msgFromSender.Id, msgFromSender.freeSlots);
-        printHist();
+        //printHist();
         }
       }
     }
 
     uint64_t localkey= getHistKey();
-    if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<progTime)){
+    if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<((programTime*60*1000)-1000))){
         //sched=simpleRRSched(m);
-        ofstream file, filem;
-        file.open("availableEpns.txt", std::ios_base::app);
-        file<<availableEpns(generateArray1())<<endl;
-        filem.open("EpnsInSchedule.txt",std::ios_base::app);
-        filem<<EpnsInSchedule(availableEpns(generateArray1()))<<endl;
-        arrayForFlps = generateSchedule();
-        sched = vector<uint64_t> (amountEPNs,(uint64_t) 0);
-        sched.assign(arrayForFlps, arrayForFlps+amountEPNs);
+        availableEpns1<<availableEpns(generateArray1())<<endl;
+        EpnsInSchedule1<<EpnsInSchedule(availableEpns(generateArray1()))<<endl;
+        vectorForFlps = generateSchedule();
+        printVecFLP(vectorForFlps);
         //m=(m+amountEPNs)%numEPNS;
         keyForGeneratingArray = localkey;
-        printArrFLP(arrayForFlps, amountEPNs);
         scheduleNumber++;
-        std::thread t1= senderThread(&sched, &numFLPS, &amountEPNs, &scheduleNumber);
+        std::thread t1= senderThread(&vectorForFlps, &numFLPS, &amountEPNs, &scheduleNumber);
         t1.detach();
+        vectorForFlps.clear();
         }
 
     else{
       LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+      ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
+      ofHeatdata.open("heatdata.txt", std::ios_base::app);
+      ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
+      ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
+      ofHeatdata<<heatdata1.rdbuf();
+      ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
+      ofAvailableEpns<<availableEpns1.rdbuf();
       ChangeState("READY");
       ChangeState("RESETTING_TASK");
       ChangeState("DEVICE_READY");
@@ -139,7 +162,7 @@ bool scheduler::ConditionalRun()
 
 
 
-thread scheduler::senderThread(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
+thread scheduler::senderThread(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
     return std::thread([=]{
     this->sender(vec, num, numE, schedNum);
   });
@@ -251,42 +274,38 @@ void scheduler::update(uint64_t epnId, uint64_t myMem) {
 
 
 void scheduler::toFile(){
-    ofstream myfile;
-    myfile.open("heatdata.txt", std::ios_base::app);
     for(auto a = history.begin(); a != history.end(); a ++ ){
         for(uint64_t i = 0; i < (numEPNS-1); i++){
-            myfile << history[(*a).first].at(i).memVal << ", ";
+            LOG(INFO)<< "inside FILE LOOP and writing to history: "<< history[(*a).first].at(i).memVal;
+            heatdata1 << history[(*a).first].at(i).memVal << ", ";
 
         }
-        myfile << history[(*a).first].at(numEPNS-1).memVal << endl;
+        LOG(INFO)<< "outer For loop and writing the last value of the history to file which is"<<history[(*a).first].at(numEPNS-1).memVal;
+        heatdata1 << history[(*a).first].at(numEPNS-1).memVal << endl;
     }
 }
 
 
-int* scheduler::generateSchedule(){
+std::vector<int> scheduler::generateSchedule(){
     int* temporaryStorage= generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
-    int* desFLPsPointer = new int[amountEPNs]; // pointer to the array which the function will give back and contains the IDs of the EPNs that the FLPs need to send their subtimeframes to, beginning from the lowest ID and then in ascending order...
-
+    std::vector<int> desFLPsPointer;
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
     for(uint64_t i = 0; i < amountEPNs; i++){
         int maxIndex = maxSearch(temporaryStorage);
-        desFLPsPointer[i]=maxIndex; //index of the EPNs with most memory capacity
+        desFLPsPointer.push_back(maxIndex); //index of the EPNs with most memory capacity
     }
 
     return desFLPsPointer;
-    if(temporaryStorage)
-        delete[] temporaryStorage;
-    if(desFLPsPointer)
-        delete[] desFLPsPointer;
 }
 
+
 int* scheduler::generateArray1(){
-  int*temporaryStorage=new int[numEPNS];
+  int* temporaryStorage=new int[numEPNS];
 
   auto latestKey = history.rbegin();
   //checking whether the EPNs are valid
-  for(uint64_t i = 0; i < numEPNS; i++){ (*latestKey).first
+  for(uint64_t i = 0; i < numEPNS; i++){
       if((history[(*latestKey).first].at(i).ts) + 5000 >= (*latestKey).first){
           temporaryStorage[i]= history[(*latestKey).first].at(i).memVal; //writing the memory values of the valid EPns in array
       }
@@ -295,8 +314,6 @@ int* scheduler::generateArray1(){
       }
   }
   return temporaryStorage;
-  if(temporaryStorage)
-    delete[] temporaryStorage;
 }
 
 int scheduler::maxSearch(int arr[]){
@@ -317,9 +334,10 @@ int scheduler::maxSearch(int arr[]){
     }
 }
 
-void scheduler::printArrFLP(int arr[], int length){
-     for (int n=0; n<length; ++n)
-    cout << "Printing the array for the flps. number: "<< n+1<<" goes to: "<< arr[n] <<endl;
+void scheduler::printVecFLP(std::vector<int> a){
+     for(int b=0; b != a.size(); b ++ ){
+    cout << "Printing the vector for the flps. number: "<< b+1<<" goes to: "<< a.at(b) <<endl;
+}
 }
 
 
@@ -331,7 +349,7 @@ void scheduler::printfreeSlots(int arr[], int length){
 
 
 
-void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
+void scheduler::sender(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
     cout<<"number of FLPS: "<< (*num) << endl;
     for(uint64_t i=0; i<(*num); i++){
       auto &mySendingChan = GetChannel("schedflp", i);
@@ -342,7 +360,7 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
       std::memcpy(message->GetData(), vec->data(), (sizeof(uint64_t))*(*numE));
       mySendingChan.Send(message);
 
-      for(vector<uint64_t>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
+      for(vector<int>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
 
         LOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
       }
@@ -371,8 +389,8 @@ int scheduler::EpnsInSchedule(int aE){
   }
 }
 
-std::vector<uint64_t> scheduler::simpleRRSched(int m){
-  std::vector<uint64_t> roundr;
+std::vector<int> scheduler::simpleRRSched(int m){
+  std::vector<int> roundr;
   for(int j=m; j<(m+amountEPNs);j++){
     roundr.push_back(j);
   }
@@ -394,8 +412,7 @@ simpleRRSched()
 
 scheduler::~scheduler()
 {
-    if(arrayForFlps)
-        delete[] arrayForFlps;
+
 
 }
 

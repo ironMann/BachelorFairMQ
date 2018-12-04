@@ -15,6 +15,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <sstream>
 
 namespace example_SCHEDULER_FLP_EPN
 {
@@ -24,7 +25,8 @@ class scheduler : public FairMQDevice
   public:
     scheduler();
     virtual ~scheduler();
-    void sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
+    void sender(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
+  
 
   protected:
   //for EPN SCHEDULER DEALING
@@ -33,9 +35,9 @@ class scheduler : public FairMQDevice
     uint64_t numEPNS;
     uint64_t numFLPS;
     const unsigned intMs;
-    const unsigned progTime;
+    uint64_t programTime;
     const unsigned historyMaxMs;
-    std::vector<uint64_t>  sched;
+
 
        //constants to generate array sent to FLPs
     const unsigned msBetweenSubtimeframes; //the amount of subtimeframes the FLPs send to the EPNs per second
@@ -43,7 +45,10 @@ class scheduler : public FairMQDevice
     const float intervalFLPs; // the interval in seconds in which the scheduler needs to send array to all FLPs
 
   //for SCHEDULER FLP DEALING
-    int* arrayForFlps; //just declare a
+    std::vector<int> vectorForFlps; //just declare a
+    std::stringstream availableEpns1;
+    std::stringstream EpnsInSchedule1;
+    std::stringstream heatdata1;
 
 
 
@@ -55,7 +60,7 @@ class scheduler : public FairMQDevice
     uint64_t scheduleNumber;
     int m;
 
-    std::thread senderThread(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
+    std::thread senderThread(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
 
 
 
@@ -67,14 +72,14 @@ class scheduler : public FairMQDevice
     void update(uint64_t epnId, uint64_t myMem);
     void toFile();
     //what I want to return in this function is a pointer to the first element of the array
-    int* generateSchedule();
+    std::vector<int> generateSchedule();
     int* generateArray1();
     int maxSearch(int arr[]); // find the EPN with the most free memory, returns the index of the EPN with most free memory
-    void printArrFLP(int arr[], int length);
+    void printVecFLP(std::vector<int> a);
     void printfreeSlots(int arr[], int length);
     int availableEpns(int arr[]);
     int EpnsInSchedule(int aE);
-    std::vector<uint64_t> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
+    std::vector<int> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
 
 
 

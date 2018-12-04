@@ -15,6 +15,7 @@
 #include <string>
 #include <random>
 #include <thread>
+#include <sstream>
 
 
 
@@ -27,11 +28,11 @@ class epn : public FairMQDevice
   public:
     epn();
     virtual ~epn();
-    void send(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max);
+    void send(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max);
 
 
   protected:
-    int Id;
+    uint64_t Id;
     int freeSlots;
     uint64_t maxSlots;
     uint64_t numEPNS;
@@ -45,8 +46,11 @@ class epn : public FairMQDevice
 
     uint64_t startTime;
     uint64_t timeBetweenTf;
-    const uint64_t programTimeMsec; //the duration of the program.
+    uint64_t programTime; //the duration of the program.
     const unsigned intMs;
+
+    std::stringstream receptionOfTf1;
+    std::stringstream processingTime1;
 
 
 
@@ -61,13 +65,15 @@ class epn : public FairMQDevice
 
 
 
-    std::thread senderThread(int* memory, uint64_t* numepns, int* id, uint64_t* start,const uint64_t* max);
+    std::thread senderThread(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max);
 
 
-    static void MyDelayedFun(float delayWork, int* memory);
+    static void MyDelayedFun(float delayWork, int* memory, std::stringstream* procTime);
     float getDelay();
 
     uint64_t getHistKey();
+
+
 
 
 

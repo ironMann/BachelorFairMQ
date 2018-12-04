@@ -31,7 +31,7 @@ class flp : public FairMQDevice
     int myId;
     int sTF;
     uint64_t startTime;
-    const uint64_t progTime;
+    uint64_t programTime;
 
 
     virtual void Run();

@@ -9,7 +9,8 @@ void addCustomOptions(bpo::options_description& options)
       ("amountEPNs", bpo::value<int>()->default_value(0), "number of the EPNs in the schedule")
       ("numEPNS", bpo::value<uint64_t>()->default_value(0), "total number of EPNs")
       ("socket", bpo::value<int>()->default_value(0), "socket number")
-      ("myId", bpo::value<int>()->default_value(0), "IdofFlp");
+      ("myId", bpo::value<int>()->default_value(0), "IdofFlp")
+      ("programTime", bpo::value<uint64_t>()->default_value(1), "time of the program");
 
 }
 

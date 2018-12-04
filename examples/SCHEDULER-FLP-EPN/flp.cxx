@@ -26,7 +26,7 @@ flp::flp()
     , myId(0)
     , sTF(0)
     , startTime(0)
-    , progTime(60*20*1000)
+    , programTime(0)
 
 {
 }
@@ -37,6 +37,7 @@ void flp::InitTask()
     numEPNS= fConfig->GetValue<uint64_t>("numEPNS");
     socket = fConfig->GetValue<int>("socket");
     myId = fConfig->GetValue<int>("myId");
+    programTime = fConfig->GetValue<uint64_t>("programTime");
     arrayofEpns = new int[amountEPNs];
     startTime=getHistKey();
 }
@@ -45,7 +46,7 @@ void flp::Run()
 {
     while (CheckCurrentState(RUNNING)) //
     {
-      if(getHistKey()-startTime>=progTime){
+      if(getHistKey()-startTime>=(programTime*60*1000)){
         LOG(INFO)<<"TERMINATING PROGRAM NOW!";
         ChangeState("READY");
         ChangeState("RESETTING_TASK");
@@ -58,7 +59,7 @@ void flp::Run()
       else{
             auto &myRecvChan = GetChannel("schedflp");
             //I expect this kind of message
-            std::vector<uint64_t> msgIReceive (amountEPNs, 0);
+            std::vector<int> msgIReceive (amountEPNs, 0);
 
             //receive a message
             FairMQMessagePtr aMessage = myRecvChan.NewMessage();
@@ -68,7 +69,7 @@ void flp::Run()
             std::memcpy(msgIReceive.data(), aMessage->GetData(), ((sizeof(uint64_t))*amountEPNs));
             if(aMessage->GetSize() ==((sizeof(uint64_t))*amountEPNs)){
               int i=0;
-              for(vector<uint64_t>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
+              for(vector<int>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
               LOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
               arrayofEpns[i]=*iter;
               LOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
