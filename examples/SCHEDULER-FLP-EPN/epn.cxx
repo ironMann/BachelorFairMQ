@@ -49,7 +49,7 @@ void epn::InitTask()
 {
 	timeBetweenTf=getHistKey();
         startTime=getHistKey();
-        Id = fConfig->GetValue<int>("myId");
+        Id = fConfig->GetValue<uint64_t>("myId");
         maxSlots = 4;
         freeSlots = maxSlots;
         numEPNS = fConfig->GetValue<uint64_t>("numEPNS");

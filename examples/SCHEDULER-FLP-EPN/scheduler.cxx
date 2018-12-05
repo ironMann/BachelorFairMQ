@@ -162,7 +162,7 @@ bool scheduler::ConditionalRun()
 
 
 
-thread scheduler::senderThread(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
+thread scheduler::senderThread(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
     return std::thread([=]{
     this->sender(vec, num, numE, schedNum);
   });
@@ -286,9 +286,9 @@ void scheduler::toFile(){
 }
 
 
-std::vector<int> scheduler::generateSchedule(){
+std::vector<uint64_t> scheduler::generateSchedule(){
     int* temporaryStorage= generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
-    std::vector<int> desFLPsPointer;
+    std::vector<uint64_t> desFLPsPointer;
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
     for(uint64_t i = 0; i < amountEPNs; i++){
@@ -334,7 +334,7 @@ int scheduler::maxSearch(int arr[]){
     }
 }
 
-void scheduler::printVecFLP(std::vector<int> a){
+void scheduler::printVecFLP(std::vector<uint64_t> a){
      for(int b=0; b != a.size(); b ++ ){
     cout << "Printing the vector for the flps. number: "<< b+1<<" goes to: "<< a.at(b) <<endl;
 }
@@ -349,7 +349,7 @@ void scheduler::printfreeSlots(int arr[], int length){
 
 
 
-void scheduler::sender(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
+void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
     cout<<"number of FLPS: "<< (*num) << endl;
     for(uint64_t i=0; i<(*num); i++){
       auto &mySendingChan = GetChannel("schedflp", i);
@@ -360,7 +360,7 @@ void scheduler::sender(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uin
       std::memcpy(message->GetData(), vec->data(), (sizeof(uint64_t))*(*numE));
       mySendingChan.Send(message);
 
-      for(vector<int>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
+      for(vector<uint64_t>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
 
         LOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
       }

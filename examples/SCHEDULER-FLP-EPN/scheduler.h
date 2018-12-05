@@ -25,8 +25,8 @@ class scheduler : public FairMQDevice
   public:
     scheduler();
     virtual ~scheduler();
-    void sender(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
-  
+    void sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
+
 
   protected:
   //for EPN SCHEDULER DEALING
@@ -45,7 +45,7 @@ class scheduler : public FairMQDevice
     const float intervalFLPs; // the interval in seconds in which the scheduler needs to send array to all FLPs
 
   //for SCHEDULER FLP DEALING
-    std::vector<int> vectorForFlps; //just declare a
+    std::vector<uint64_t> vectorForFlps; //just declare a
     std::stringstream availableEpns1;
     std::stringstream EpnsInSchedule1;
     std::stringstream heatdata1;
@@ -60,7 +60,7 @@ class scheduler : public FairMQDevice
     uint64_t scheduleNumber;
     int m;
 
-    std::thread senderThread(std::vector<int>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
+    std::thread senderThread(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum);
 
 
 
@@ -72,10 +72,10 @@ class scheduler : public FairMQDevice
     void update(uint64_t epnId, uint64_t myMem);
     void toFile();
     //what I want to return in this function is a pointer to the first element of the array
-    std::vector<int> generateSchedule();
+    std::vector<uint64_t> generateSchedule();
     int* generateArray1();
     int maxSearch(int arr[]); // find the EPN with the most free memory, returns the index of the EPN with most free memory
-    void printVecFLP(std::vector<int> a);
+    void printVecFLP(std::vector<uint64_t> a);
     void printfreeSlots(int arr[], int length);
     int availableEpns(int arr[]);
     int EpnsInSchedule(int aE);

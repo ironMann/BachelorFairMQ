@@ -59,7 +59,7 @@ void flp::Run()
       else{
             auto &myRecvChan = GetChannel("schedflp");
             //I expect this kind of message
-            std::vector<int> msgIReceive (amountEPNs, 0);
+            std::vector<uint64_t> msgIReceive (amountEPNs, 0);
 
             //receive a message
             FairMQMessagePtr aMessage = myRecvChan.NewMessage();
@@ -69,7 +69,7 @@ void flp::Run()
             std::memcpy(msgIReceive.data(), aMessage->GetData(), ((sizeof(uint64_t))*amountEPNs));
             if(aMessage->GetSize() ==((sizeof(uint64_t))*amountEPNs)){
               int i=0;
-              for(vector<int>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
+              for(vector<uint64_t>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
               LOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
               arrayofEpns[i]=*iter;
               LOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
