@@ -272,7 +272,6 @@ void scheduler::update(uint64_t epnId, uint64_t myMem) {
 
 }
 
-
 void scheduler::toFile(){
     for(auto a = history.begin(); a != history.end(); a ++ ){
         for(uint64_t i = 0; i < (numEPNS-1); i++){
@@ -287,7 +286,7 @@ void scheduler::toFile(){
 
 
 std::vector<uint64_t> scheduler::generateSchedule(){
-    int* temporaryStorage= generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
+    vector<int> temporaryStorage = generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
     std::vector<uint64_t> desFLPsPointer;
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
@@ -296,27 +295,43 @@ std::vector<uint64_t> scheduler::generateSchedule(){
         desFLPsPointer.push_back(maxIndex); //index of the EPNs with most memory capacity
     }
 
+    // now decrement resources of selected EPNs!
+    // so they are not use in the next schedule again
+    auto latestKey = history.rbegin();
+    for (unsigned i = 0; i < desFLPsPointer.size(); i++) {
+        if (desFLPsPointer[i] == -1)
+            continue;
+
+        // just to check
+        if (latestKey->second.at(desFLPsPointer[i]).memVal <= 0)
+            LOG(WARNING) << "ERROR: EPN selected for schedule but does not have memory slots!";
+
+        latestKey->second.at(desFLPsPointer[i]).memVal -= 1;
+    }
+
     return desFLPsPointer;
 }
 
+vector<int> scheduler::generateArray1()
+{
+    vector<int> temporaryStorage(numEPNS, -1 /* def value */);
 
-int* scheduler::generateArray1(){
-  int* temporaryStorage=new int[numEPNS];
+    auto latestKey = history.rbegin();
+    // checking whether the EPNs are valid
+    for (uint64_t i = 0; i < numEPNS; i++) {
+        if (latestKey->second.at(i).ts + 5000 >= latestKey->first) {
+            // writing the memory values of the valid EPns in array
+            temporaryStorage[i] = latestKey->second.at(i).memVal;
+        } else {               // setting the other values to -1
+            temporaryStorage[i] = -1;
+            latestKey->second.at(i).memVal = -1; // mark them as failed
+        }
+    }
 
-  auto latestKey = history.rbegin();
-  //checking whether the EPNs are valid
-  for(uint64_t i = 0; i < numEPNS; i++){
-      if((history[(*latestKey).first].at(i).ts) + 5000 >= (*latestKey).first){
-          temporaryStorage[i]= history[(*latestKey).first].at(i).memVal; //writing the memory values of the valid EPns in array
-      }
-      else{ //setting the other values to -1
-          temporaryStorage[i]=-1;
-      }
-  }
-  return temporaryStorage;
+    return temporaryStorage;
 }
 
-int scheduler::maxSearch(int arr[]){
+int scheduler::maxSearch(vector<int> &arr){
     int max = arr[0];
     int index = 0;
     for(uint64_t i=1;i < numEPNS; i++){
@@ -325,12 +340,12 @@ int scheduler::maxSearch(int arr[]){
             index = i;
         }
     }
-    if(arr[index]==-1){
+
+    if(arr[index] == -1) {
         return -1;
-    }
-    else{
-    arr[index]=-1;
-    return index+1;
+    } else{
+        arr[index] = -1;
+        return index+1;
     }
 }
 
@@ -369,7 +384,7 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
     }
 }
 
-int scheduler::availableEpns(int arr[]){
+int scheduler::availableEpns(const vector<int> &arr) const {
   int c=0;
   for(uint64_t i=0;i<numEPNS;i++){
     if(arr[i]>0){
