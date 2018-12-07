@@ -73,11 +73,11 @@ class scheduler : public FairMQDevice
     void toFile();
     //what I want to return in this function is a pointer to the first element of the array
     std::vector<uint64_t> generateSchedule();
-    int* generateArray1();
-    int maxSearch(int arr[]); // find the EPN with the most free memory, returns the index of the EPN with most free memory
+    std::vector<int> generateArray1();
+    int maxSearch(std::vector<int> &arr); // find the EPN with the most free memory, returns the index of the EPN with most free memory
     void printVecFLP(std::vector<uint64_t> a);
     void printfreeSlots(int arr[], int length);
-    int availableEpns(int arr[]);
+    int availableEpns(const std::vector<int> &arr) const;
     int EpnsInSchedule(int aE);
     std::vector<int> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
 
