@@ -45,7 +45,7 @@ class scheduler : public FairMQDevice
     const float intervalFLPs; // the interval in seconds in which the scheduler needs to send array to all FLPs
 
   //for SCHEDULER FLP DEALING
-    std::vector<uint64_t> vectorForFlps; //just declare a
+    std::vector<uint64_t> vectorForFlps; 
     std::stringstream availableEpns1;
     std::stringstream EpnsInSchedule1;
     std::stringstream heatdata1;
@@ -77,9 +77,9 @@ class scheduler : public FairMQDevice
     int maxSearch(std::vector<int> &arr); // find the EPN with the most free memory, returns the index of the EPN with most free memory
     void printVecFLP(std::vector<uint64_t> a);
     void printfreeSlots(int arr[], int length);
-    int availableEpns(const std::vector<int> &arr) const;
-    int EpnsInSchedule(int aE);
-    std::vector<int> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
+    int availableEpns(const std::vector<int> &arr, uint64_t siz) const;
+    int EpnsInSchedule(std::vector<uint64_t> ar, uint64_t siz);
+    std::vector<uint64_t> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
 
 
 

@@ -29,7 +29,7 @@ scheduler::scheduler()
           ,historyMaxMs(60*1*intMs)//one minute
           ,msBetweenSubtimeframes(2)
           ,amountEPNs(0)
-          ,intervalFLPs(0.5)
+          ,intervalFLPs(0.75)
           ,vectorForFlps(0)
           ,availableEpns1()
           ,EpnsInSchedule1()
@@ -53,7 +53,7 @@ void scheduler::InitTask(){
     keyForGeneratingArray=getHistKey();
     keyForExiting=getHistKey();
     initialize(numEPNS);
-    printHist();
+  
 
 
 }
@@ -121,10 +121,11 @@ bool scheduler::ConditionalRun()
 
     uint64_t localkey= getHistKey();
     if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<((programTime*60*1000)-1000))){
-        //sched=simpleRRSched(m);
-        availableEpns1<<availableEpns(generateArray1())<<endl;
-        EpnsInSchedule1<<EpnsInSchedule(availableEpns(generateArray1()))<<endl;
-        vectorForFlps = generateSchedule();
+        //vectorForFlps=simpleRRSched(m);
+        availableEpns1<<availableEpns(generateArray1(), numEPNS)<<endl;
+	vectorForFlps = generateSchedule();
+        EpnsInSchedule1<<EpnsInSchedule(vectorForFlps, amountEPNs)<<endl;
+        //write function that counts -1 in the schedule and writes it to stringstream Epn in schedule
         printVecFLP(vectorForFlps);
         //m=(m+amountEPNs)%numEPNS;
         keyForGeneratingArray = localkey;
@@ -254,7 +255,7 @@ void scheduler::update(uint64_t epnId, uint64_t myMem) {
             //delete the first key.
             history.erase(firstKey);
             auto newFirstKey = history.begin();
-            //update tooOld integer
+           //update tooOld integer
             tooOld =  newFirstKey->first;
         }
         //write history to file every minute.
@@ -262,7 +263,7 @@ void scheduler::update(uint64_t epnId, uint64_t myMem) {
         toFile();
         keyForToFile = key;
         }
-        //generate array every 2 seconds.
+       
 
 
 
@@ -286,11 +287,15 @@ void scheduler::toFile(){
 
 
 std::vector<uint64_t> scheduler::generateSchedule(){
+	LOG(INFO)<< "inside generating schedule";
     vector<int> temporaryStorage = generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
+	LOG(INFO)<<"generated temporary Storage vector";
     std::vector<uint64_t> desFLPsPointer;
+	LOG(INFO)<<"vector desFLPsPointer generated";
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
     for(uint64_t i = 0; i < amountEPNs; i++){
+	LOG(INFO)<<"Inside for loop for finding  the max value the "<<i<<". time";
         int maxIndex = maxSearch(temporaryStorage);
         desFLPsPointer.push_back(maxIndex); //index of the EPNs with most memory capacity
     }
@@ -298,15 +303,26 @@ std::vector<uint64_t> scheduler::generateSchedule(){
     // now decrement resources of selected EPNs!
     // so they are not use in the next schedule again
     auto latestKey = history.rbegin();
+    LOG(INFO)<<"generated the lates Key";
     for (unsigned i = 0; i < desFLPsPointer.size(); i++) {
-        if (desFLPsPointer[i] == -1)
+	LOG(INFO)<<"ID des 5.größten EPNS: "<<desFLPsPointer[4];
+        if (desFLPsPointer[i] == -1){
+	LOG(INFO)<<"case of an empty schedule";
             continue;
+	}
 
         // just to check
-        if (latestKey->second.at(desFLPsPointer[i]).memVal <= 0)
+	uint64_t realIndex= desFLPsPointer[i]-1;
+        if (latestKey->second.at(realIndex).memVal <= 0){
             LOG(WARNING) << "ERROR: EPN selected for schedule but does not have memory slots!";
-
-        latestKey->second.at(desFLPsPointer[i]).memVal -= 1;
+	    LOG(WARNING) << "memory slots not decreased";
+	    }
+        else{
+            LOG(INFO)<<"ID des "<<i<<". größten EPNS: "<<desFLPsPointer[i];
+	    LOG(INFO)<<"Größe des FLP-pointer-vectors: "<<desFLPsPointer.size();
+            latestKey->second.at(realIndex).memVal -= 1;
+	    LOG(INFO)<< "decreased memory slots in history";
+		}
     }
 
     return desFLPsPointer;
@@ -341,7 +357,8 @@ int scheduler::maxSearch(vector<int> &arr){
         }
     }
 
-    if(arr[index] == -1) {
+    if(arr[index] == 0 || arr[index]==-1) {
+	arr[index]= -1;
         return -1;
     } else{
         arr[index] = -1;
@@ -384,9 +401,9 @@ void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE
     }
 }
 
-int scheduler::availableEpns(const vector<int> &arr) const {
+int scheduler::availableEpns(const vector<int> &arr,uint64_t siz) const {
   int c=0;
-  for(uint64_t i=0;i<numEPNS;i++){
+  for(uint64_t i=0;i<siz;i++){
     if(arr[i]>0){
       c++;
     }
@@ -394,18 +411,21 @@ int scheduler::availableEpns(const vector<int> &arr) const {
   return c;
 }
 
-
-int scheduler::EpnsInSchedule(int aE){
-  if(aE>=amountEPNs){
-    return amountEPNs;
-  }
-  else{
-    return aE;
-  }
+int scheduler::EpnsInSchedule(vector<uint64_t> ar, uint64_t siz){
+	int c=0;
+	for(uint64_t i=0; i<siz;i++){
+		if(ar[i]>0){
+			c++;
+		}
+	}
+	return c;
 }
 
-std::vector<int> scheduler::simpleRRSched(int m){
-  std::vector<int> roundr;
+
+
+
+std::vector<uint64_t> scheduler::simpleRRSched(int m){
+  std::vector<uint64_t> roundr;
   for(int j=m; j<(m+amountEPNs);j++){
     roundr.push_back(j);
   }

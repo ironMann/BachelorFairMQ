@@ -38,6 +38,7 @@ epn::epn()
     ,intMs(1000)
     ,receptionOfTf1()
     ,processingTime1()
+    ,numberOfLostTfs1()
 
 
 
@@ -68,40 +69,17 @@ bool epn::ConditionalRun()
 
   uint64_t currentTime=getHistKey();
   if(currentTime-startTime>=programTime){
-    ofstream receptionOfTf, processingTime;
-    static stringstream* all[3];
+    ofstream receptionOfTf, processingTime, numberOfLostTfs;
 
-    all[Id-1]=&receptionOfTf1;
+      receptionOfTf.open("TimebetweenReceptionOfTf.txt."+to_string(Id), std::ios_base::app);
+      processingTime.open("processingTime.txt."+to_string(Id), std::ios_base::app);
+      numberOfLostTfs.open("numberOfLostTfs.txt."+to_string(Id), std::ios_base::app);
+	
 
-      receptionOfTf.open("TimebetweenReceptionOfTf.txt", std::ios_base::app);
-      for (uint64_t a=0; a < numEPNS; a++){
-        if(a==(Id-1)){
-          LOG(INFO)<< ((*(all[a])).str());
-          receptionOfTf<< ((*(all[a])).str());
-          }
-        else{
-          std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
-
-        }
-    }
-
-
-    static stringstream* all1[3];
-    //string reception = receptionOfTf1.str();
-    //cout<<reception<<endl;
-    all1[Id-1]=&processingTime1;
-    processingTime.open("processingTime.txt", std::ios_base::app);
-      for (uint64_t a=0; a < numEPNS; a++){
-        if(a==(Id-1)){
-          LOG(INFO)<< ((*(all1[a])).str());
-          processingTime<< ((*(all1[a])).str());
-          }
-        else{
-          std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
-
-        }
-    }
-
+	receptionOfTf<<receptionOfTf1.rdbuf();
+	processingTime<<processingTime1.rdbuf();
+	numberOfLostTfs<<numberOfLostTfs1.rdbuf();
+	
 
 
 
@@ -195,6 +173,7 @@ void epn::receive(){
               t3.detach();
             } else {
               LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
+	      numberOfLostTfs1<<messagei.sTF<<endl;
               freeSlots=0;
             }
           }

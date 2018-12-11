@@ -51,7 +51,7 @@ class epn : public FairMQDevice
 
     std::stringstream receptionOfTf1;
     std::stringstream processingTime1;
-
+    std::stringstream numberOfLostTfs1;
 
 
 

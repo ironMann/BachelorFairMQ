@@ -9,6 +9,7 @@
 
 
 #include "FairMQDevice.h"
+#include <sstream>
 
 namespace example_SCHEDULER_FLP_EPN
 {
@@ -21,6 +22,7 @@ class flp : public FairMQDevice
 
   protected:
     int* arrayofEpns; //just declare a pointer
+    std::stringstream amountOfLostTfs1;
 
 
 

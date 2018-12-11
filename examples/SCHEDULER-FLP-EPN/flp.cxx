@@ -11,6 +11,9 @@
 #include "flp.h"
 #include "FairMQPoller.h"
 #include "Message.h"
+#include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -19,7 +22,7 @@ namespace example_SCHEDULER_FLP_EPN
 
 flp::flp()
     : arrayofEpns()
-    , msBetweenSubtimeframes(1000)
+    , msBetweenSubtimeframes(150)
     , amountEPNs(0)
     , numEPNS(0)
     , socket(0)
@@ -27,7 +30,7 @@ flp::flp()
     , sTF(0)
     , startTime(0)
     , programTime(0)
-
+    , amountOfLostTfs1()
 {
 }
 
@@ -47,6 +50,9 @@ void flp::Run()
     while (CheckCurrentState(RUNNING)) //
     {
       if(getHistKey()-startTime>=(programTime*60*1000)){
+	ofstream amountOfLostTfs;
+	amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
+	amountOfLostTfs<<amountOfLostTfs1;
         LOG(INFO)<<"TERMINATING PROGRAM NOW!";
         ChangeState("READY");
         ChangeState("RESETTING_TASK");
@@ -86,6 +92,7 @@ void flp::Run()
             int c = arrayofEpns[i];
             cout << "arrayofEpns["<<i<<"]: " <<c<<endl;
             cout<<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF<< endl;
+	    if(c>=0){
             auto &mySendingChan = GetChannel("data", (c-1));
             //the message I want to send
             FLPtoEPN MsgFlpEpn;
@@ -102,6 +109,12 @@ void flp::Run()
             LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
             std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes)); //wait 20 ms.
             }
+		
+	   else{
+            LOG(INFO)<< "Unfortunately there is no Epn guaranteeing the memory capacity";
+	    amountOfLostTfs1<<sTF<<endl;
+           }
+	}
 
 
       }
