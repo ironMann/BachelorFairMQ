@@ -78,7 +78,7 @@ class scheduler : public FairMQDevice
     void printVecFLP(std::vector<uint64_t> a);
     void printfreeSlots(int arr[], int length);
     int availableEpns(const std::vector<int> &arr, uint64_t siz) const;
-    int EpnsInSchedule(std::vector<uint64_t> ar, uint64_t siz);
+    int EpnsInSchedule(int avaiable, uint64_t siz);
     std::vector<uint64_t> simpleRRSched(int m); //function to print the array that will be sent to all FLPs
 
 

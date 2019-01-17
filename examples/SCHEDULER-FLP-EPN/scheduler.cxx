@@ -27,9 +27,9 @@ scheduler::scheduler()
           ,intMs(1000) //one second
           ,programTime(0)//alive time of the program
           ,historyMaxMs(60*1*intMs)//one minute
-          ,msBetweenSubtimeframes(2)
+          ,msBetweenSubtimeframes(0.625)
           ,amountEPNs(0)
-          ,intervalFLPs(0.75)
+          ,intervalFLPs(1)//interval of sending out schedule
           ,vectorForFlps(0)
           ,availableEpns1()
           ,EpnsInSchedule1()
@@ -39,7 +39,7 @@ scheduler::scheduler()
           ,keyForGeneratingArray(0)
           ,keyForExiting(0)
           ,scheduleNumber(0)
-          ,m(1) //what the hell is m for? It's for the round robin thing
+          ,m(1)
 
 {
 }
@@ -53,6 +53,7 @@ void scheduler::InitTask(){
     keyForGeneratingArray=getHistKey();
     keyForExiting=getHistKey();
     initialize(numEPNS);
+    std::this_thread::sleep_for(std::chrono::milliseconds (5000));
   
 
 
@@ -61,9 +62,9 @@ void scheduler::InitTask(){
 
 bool scheduler::ConditionalRun()
 {
-  //FairMQPollerPtr poller(NewPoller("epnsched"));
-  //poller->Poll(1000);
+
     if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
+      LOG(INFO)<<"about to terminate the program!";
       ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
       ofHeatdata.open("heatdata.txt", std::ios_base::app);
       ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
@@ -73,91 +74,65 @@ bool scheduler::ConditionalRun()
       ofAvailableEpns<<availableEpns1.rdbuf();
 
       LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-      ChangeState("READY");
-      ChangeState("RESETTING_TASK");
-      ChangeState("DEVICE_READY");
-      ChangeState("RESETTING_DEVICE");
-      ChangeState("IDLE");
-      ChangeState("EXITING");
+      return false;
     }
-    else{
-      for(uint64_t i=0; i < numEPNS; i++){
-      //if (!poller->CheckInput("epnsched", i)) {
-        //continue;
-      //}
 
-        auto &myRecvChan = GetChannel("epnsched",i);
+
+    
+   FairMQPollerPtr poller(NewPoller("epnsched"));
+   poller->Poll(100);
+
+    for(int i= 0; i < numEPNS; i++){
+      if (!poller->CheckInput("epnsched", i)) {
+       		 continue;
+     		 }
+
+       	 auto &myRecvChan = GetChannel("epnsched",i);
         // I expect this kind of messages
         EPNtoScheduler msgFromSender;
         // receive a message
         FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-        if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
-              ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
-              ofHeatdata.open("heatdata.txt", std::ios_base::app);
-              ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
-              ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
-              ofHeatdata<<heatdata1.rdbuf();
-              ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
-              ofAvailableEpns<<availableEpns1.rdbuf();
-              LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-              ChangeState("READY");
-              ChangeState("RESETTING_TASK");
-              ChangeState("DEVICE_READY");
-              ChangeState("RESETTING_DEVICE");
-              ChangeState("IDLE");
-              ChangeState("EXITING");
-            }
-            else{
         myRecvChan.Receive(aMessage);
-        // get the data of the FairMQ message
-        std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
-        if(aMessage->GetSize() == sizeof(EPNtoScheduler)){
-        LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
-        update(msgFromSender.Id, msgFromSender.freeSlots);
-        //printHist();
-        }
-      }
+	if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
+       		 // get the data of the FairMQ message
+       		 std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
+       		//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
+       		update(msgFromSender.Id, msgFromSender.freeSlots);
+		}
     }
 
-    uint64_t localkey= getHistKey();
-    if((localkey>=(keyForGeneratingArray + intervalFLPs*intMs))&&((localkey-keyForExiting)<((programTime*60*1000)-1000))){
-        //vectorForFlps=simpleRRSched(m);
-        availableEpns1<<availableEpns(generateArray1(), numEPNS)<<endl;
-	vectorForFlps = generateSchedule();
-        EpnsInSchedule1<<EpnsInSchedule(vectorForFlps, amountEPNs)<<endl;
-        //write function that counts -1 in the schedule and writes it to stringstream Epn in schedule
-        printVecFLP(vectorForFlps);
-        //m=(m+amountEPNs)%numEPNS;
-        keyForGeneratingArray = localkey;
-        scheduleNumber++;
-        std::thread t1= senderThread(&vectorForFlps, &numFLPS, &amountEPNs, &scheduleNumber);
-        t1.detach();
-        vectorForFlps.clear();
-        }
+    if( (getHistKey() >= (keyForGeneratingArray + uint64_t( intervalFLPs*1000.0))) && ((getHistKey()-keyForExiting)<((programTime*60*1000)-1000))){
+    
+	LOG(INFO) << "next time " << (keyForGeneratingArray + uint64_t(intervalFLPs*1000.0));
 
-    else{
-      LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-      ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
-      ofHeatdata.open("heatdata.txt", std::ios_base::app);
-      ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
-      ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
-      ofHeatdata<<heatdata1.rdbuf();
-      ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
-      ofAvailableEpns<<availableEpns1.rdbuf();
-      ChangeState("READY");
-      ChangeState("RESETTING_TASK");
-      ChangeState("DEVICE_READY");
-      ChangeState("RESETTING_DEVICE");
-      ChangeState("IDLE");
-      ChangeState("EXITING");
+	LOG(INFO) << "Creating the schedule " << scheduleNumber << " at time " << getHistKey() << " lastKey " << keyForGeneratingArray;
+        LOG(INFO) << "intervalFLPs " << intervalFLPs;
 
+	 vectorForFlps=simpleRRSched(m);
+         m=(m+amountEPNs)%numEPNS;
+         availableEpns1<<availableEpns(generateArray1(), numEPNS)<<endl;
+         //vectorForFlps = generateSchedule();
+         EpnsInSchedule1<<EpnsInSchedule(availableEpns(generateArray1(), numEPNS), amountEPNs)<<endl;
+         //printVecFLP(vectorForFlps);
+         keyForGeneratingArray = getHistKey();
+         scheduleNumber++;
+         std::thread t1= senderThread(&vectorForFlps, &numFLPS, &amountEPNs, &scheduleNumber);
+         t1.detach();
+     }
+	else  if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
+             	ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
+             	ofHeatdata.open("heatdata.txt", std::ios_base::app);
+             	ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
+             	ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
+             	ofHeatdata<<heatdata1.rdbuf();
+             	ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
+             	ofAvailableEpns<<availableEpns1.rdbuf();
+             	LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+		return false;
+           }
 
-
-    }
-
-
-    return true;
-  }
+  
+  return true;
 }
 
 
@@ -177,10 +152,10 @@ uint64_t scheduler::getHistKey(){
     //get the time from THEN to now
     auto duration = time.time_since_epoch();
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
     //std::cout << "Milliseconds : " << millis << std::endl;
     //determine the interval (key for the hist map)
-    const std::uint64_t intKey = millis / intMs * intMs;
+    //const std::uint64_t intKey = millis / 1000  * 1000;
+    const std::uint64_t intKey = millis /  25   * 25;
     //cout<< "histKey : " << intKey << endl;
 
     return intKey;
@@ -194,6 +169,10 @@ void scheduler::initialize(uint64_t numberofEPNs){
 
     if (history.count(key) == 0) {
         history.insert(pair<uint64_t, vector<EpnInfo>> (key, vector<EpnInfo> (numberofEPNs)));
+	for(uint64_t a=0; a < numEPNS; a++){
+		history[key].at(a).ts=key;
+		history[key].at(a).memVal=3;
+		}
     }
 }
 
@@ -276,26 +255,26 @@ void scheduler::update(uint64_t epnId, uint64_t myMem) {
 void scheduler::toFile(){
     for(auto a = history.begin(); a != history.end(); a ++ ){
         for(uint64_t i = 0; i < (numEPNS-1); i++){
-            LOG(INFO)<< "inside FILE LOOP and writing to history: "<< history[(*a).first].at(i).memVal;
+            //LOG(INFO)<< "inside FILE LOOP and writing to history: "<< history[(*a).first].at(i).memVal;
             heatdata1 << history[(*a).first].at(i).memVal << ", ";
 
         }
-        LOG(INFO)<< "outer For loop and writing the last value of the history to file which is"<<history[(*a).first].at(numEPNS-1).memVal;
+        //LOG(INFO)<< "outer For loop and writing the last value of the history to file which is"<<history[(*a).first].at(numEPNS-1).memVal;
         heatdata1 << history[(*a).first].at(numEPNS-1).memVal << endl;
     }
 }
 
 
 std::vector<uint64_t> scheduler::generateSchedule(){
-	LOG(INFO)<< "inside generating schedule";
+	//LOG(INFO)<< "inside generating schedule";
     vector<int> temporaryStorage = generateArray1(); //pointer to array of amount of EPNs which we need to store the memory size of the valid EPNs
-	LOG(INFO)<<"generated temporary Storage vector";
+	//LOG(INFO)<<"generated temporary Storage vector";
     std::vector<uint64_t> desFLPsPointer;
-	LOG(INFO)<<"vector desFLPsPointer generated";
+	//LOG(INFO)<<"vector desFLPsPointer generated";
     //printfreeSlots(temporaryStorage, 1);
     //using maxSearchFunction the size of "amountEPNs" times to get the Ids of the EPNs with the highest memory capacities
     for(uint64_t i = 0; i < amountEPNs; i++){
-	LOG(INFO)<<"Inside for loop for finding  the max value the "<<i<<". time";
+	//LOG(INFO)<<"Inside for loop for finding  the max value the "<<i<<". time";
         int maxIndex = maxSearch(temporaryStorage);
         desFLPsPointer.push_back(maxIndex); //index of the EPNs with most memory capacity
     }
@@ -303,11 +282,8 @@ std::vector<uint64_t> scheduler::generateSchedule(){
     // now decrement resources of selected EPNs!
     // so they are not use in the next schedule again
     auto latestKey = history.rbegin();
-    LOG(INFO)<<"generated the lates Key";
     for (unsigned i = 0; i < desFLPsPointer.size(); i++) {
-	LOG(INFO)<<"ID des 5.größten EPNS: "<<desFLPsPointer[4];
         if (desFLPsPointer[i] == -1){
-	LOG(INFO)<<"case of an empty schedule";
             continue;
 	}
 
@@ -318,10 +294,8 @@ std::vector<uint64_t> scheduler::generateSchedule(){
 	    LOG(WARNING) << "memory slots not decreased";
 	    }
         else{
-            LOG(INFO)<<"ID des "<<i<<". größten EPNS: "<<desFLPsPointer[i];
-	    LOG(INFO)<<"Größe des FLP-pointer-vectors: "<<desFLPsPointer.size();
             latestKey->second.at(realIndex).memVal -= 1;
-	    LOG(INFO)<< "decreased memory slots in history";
+	    //LOG(INFO)<< "decreased memory slots in history";
 		}
     }
 
@@ -382,23 +356,26 @@ void scheduler::printfreeSlots(int arr[], int length){
 
 
 void scheduler::sender(std::vector<uint64_t>* vec, uint64_t* num, uint64_t* numE, uint64_t* schedNum){
-    cout<<"number of FLPS: "<< (*num) << endl;
-    for(uint64_t i=0; i<(*num); i++){
-      auto &mySendingChan = GetChannel("schedflp", i);
+    const vector<uint64_t> lVec = *vec;
+    assert(lVec.size() == amountEPNs);
+    vec->clear();
 
-      FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*(*numE));
-
-
-      std::memcpy(message->GetData(), vec->data(), (sizeof(uint64_t))*(*numE));
-      mySendingChan.Send(message);
-
-      for(vector<uint64_t>::const_iterator iter = vec->begin(); iter!=vec->end(); ++iter){
+    for(vector<uint64_t>::const_iterator iter = lVec.begin(); iter!=lVec.end(); ++iter){
 
         LOG(INFO)<<"Schedule number "<< *schedNum<<" sent Id of epn which is: "<< *iter;
       }
 
+    for(uint64_t i=0; i<numFLPS; i++){
+      auto &mySendingChan = GetChannel("schedflp", i);
+
+      FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*lVec.size());
+
+
+      std::memcpy(message->GetData(), lVec.data(), message->GetSize());
+      mySendingChan.Send(message);
 
     }
+
 }
 
 int scheduler::availableEpns(const vector<int> &arr,uint64_t siz) const {
@@ -411,35 +388,60 @@ int scheduler::availableEpns(const vector<int> &arr,uint64_t siz) const {
   return c;
 }
 
-int scheduler::EpnsInSchedule(vector<uint64_t> ar, uint64_t siz){
-	int c=0;
-	for(uint64_t i=0; i<siz;i++){
-		if(ar[i]>0){
-			c++;
+int scheduler::EpnsInSchedule(int avaiable, uint64_t siz){
+	if(avaiable<siz){
+		return avaiable;
 		}
-	}
-	return c;
+	else{
+		return siz;
+		}
 }
 
 
 
 
-std::vector<uint64_t> scheduler::simpleRRSched(int m){
+std::vector<uint64_t> scheduler::simpleRRSched(int mm){
+  LOG(INFO)<<"before creating vector";
   std::vector<uint64_t> roundr;
-  for(int j=m; j<(m+amountEPNs);j++){
-    roundr.push_back(j);
-  }
+  LOG(INFO)<<"just created vector";
+  auto prevKey = history.rbegin();
+  LOG(INFO)<<"got the last key";
+  uint64_t prevKeyInt = prevKey->first;
+  LOG(INFO)<<"made the last key to an integer";
+  for(int j=mm; j<(mm+amountEPNs);j++){
+	 LOG(INFO)<<"inside the for loop";
+	if(j<=numEPNS){
+ 		 if(history[prevKeyInt].at(j-1).memVal==0){ //case that it's either zero or broken
+			LOG(INFO)<<"no memory capacity";
+			roundr.push_back(-1);
+			LOG(INFO)<<"inserted -1 in the vector";
+			}
+		 else{
+			LOG(INFO)<<"memory capacity";	
+   	       		roundr.push_back(j);
+			LOG(INFO)<<"pushed back: "<< j;
+ 	       		}
+		}
+	else{
+		int k = j%numEPNS;
+		if(history[prevKeyInt].at(k-1).memVal==0){ //case that it's either zero or broken
+                       		 LOG(INFO)<<"no memory capacity";
+                       		 roundr.push_back(-1);
+                       		 LOG(INFO)<<"inserted -1 in the vector";
+                       		 }
+                 else{
+                       		 LOG(INFO)<<"memory capacity";   
+                       		 roundr.push_back(k);
+                       		 LOG(INFO)<<"pushed back: "<< k;
+			       	}
+
+	
+ 	 }
+	}
   return roundr;
 
 }
-/*
-simpleRRSched()
 
-  static EPNtosend - 0
-
-
-  epn = epn +1 mod% (numepns)
-  */
 
 
 

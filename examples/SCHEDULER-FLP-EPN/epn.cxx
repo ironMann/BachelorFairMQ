@@ -24,14 +24,14 @@ namespace example_SCHEDULER_FLP_EPN
 epn::epn()
     : Id(0)
     , freeSlots(0)
-    , maxSlots(4)
+    , maxSlots()
     , numEPNS()
     , numFLPS(0)
     , rcvdSTFs()
     , it()
     , sTF(1)
-    , procTime(10)
-    , procDev(1)
+    , procTime(30)
+    , procDev(5)
     , startTime(0)
     ,timeBetweenTf(0)
     ,programTime(0)
@@ -39,7 +39,7 @@ epn::epn()
     ,receptionOfTf1()
     ,processingTime1()
     ,numberOfLostTfs1()
-
+ 
 
 
     {
@@ -51,7 +51,7 @@ void epn::InitTask()
 	timeBetweenTf=getHistKey();
         startTime=getHistKey();
         Id = fConfig->GetValue<uint64_t>("myId");
-        maxSlots = 4;
+        maxSlots = fConfig->GetValue<uint64_t>("maxSlots");
         freeSlots = maxSlots;
         numEPNS = fConfig->GetValue<uint64_t>("numEPNS");
         numFLPS = fConfig->GetValue<uint64_t>("numFLPS");
@@ -73,12 +73,12 @@ bool epn::ConditionalRun()
 
       receptionOfTf.open("TimebetweenReceptionOfTf.txt."+to_string(Id), std::ios_base::app);
       processingTime.open("processingTime.txt."+to_string(Id), std::ios_base::app);
-      numberOfLostTfs.open("numberOfLostTfs.txt."+to_string(Id), std::ios_base::app);
+      //numberOfLostTfs.open("numberOfLostTfs.txt."+to_string(Id), std::ios_base::app);
 	
 
 	receptionOfTf<<receptionOfTf1.rdbuf();
 	processingTime<<processingTime1.rdbuf();
-	numberOfLostTfs<<numberOfLostTfs1.rdbuf();
+        //numberOfLostTfs<<numberOfLostTfs1.rdbuf();
 	
 
 
@@ -109,11 +109,9 @@ uint64_t epn::getHistKey(){
     const auto time = std::chrono::high_resolution_clock::now();
     //get the time from THEN to now
     auto duration = time.time_since_epoch();
-    const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    //std::cout << "Milliseconds : " << millis << std::endl;
+    const std::uint64_t intKey = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     //determine the interval (key for the hist map)
-    const std::uint64_t intKey = millis / intMs * intMs;
-    //cout<< "histKey : " << intKey << endl;
+    //const std::uint64_t intKey = millis / intMs * intMs;
     return intKey;
 
 }
@@ -153,7 +151,7 @@ void epn::receive(){
           if(rcvdSTFs[messagei.sTF] == numFLPS){
             receptionOfTf1<< (getHistKey()-timeBetweenTf) <<skipws<< endl;
             timeBetweenTf=getHistKey();
-            LOG(info) << "Epn received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
+           // LOG(info) << "Epn: "<< Id<<" received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;
           }
           /*
           for( it=rcvdSTFs.begin(); it!=rcvdSTFs.end(); it++){
@@ -164,17 +162,18 @@ void epn::receive(){
 
           if(rcvdSTFs[messagei.sTF] == numFLPS){
 
-            freeSlots--;
+           
 
-            if(freeSlots>=0) {
+            if(freeSlots>0) {
+	      freeSlots--;
               float x = getDelay();
-              LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF;
+              LOG(INFO) << "Delay work for: " << x << "seconds for TFid: " << messagei.sTF << "and my ID is: " << Id<<"and this is schedule nr: "<<messagei.schedNum;
               std::thread t3(MyDelayedFun, x, &freeSlots, &processingTime1);
               t3.detach();
             } else {
-              LOG(info)<<"INFORMATION LOST DUE TO OVERCAPACITY.";
+              LOG(INFO)<<"INFORMATION LOST DUE TO OVERCAPACITY AND MY ID IS: "<<Id<<"AND THIS IS SCHEDULE NR.: "<<messagei.schedNum;
 	      numberOfLostTfs1<<messagei.sTF<<endl;
-              freeSlots=0;
+              
             }
           }
       }
@@ -198,8 +197,8 @@ void epn::send(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,con
             std::memcpy(message->GetData(), &myMsg, sizeof(EPNtoScheduler));
             mySendingChan.Send(message);
 
-            LOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(long  (1000)));
+           // LOG(INFO)<<"sent ID: "<<myMsg.Id<<" and amount of free slots              "<<myMsg.freeSlots<< " general amount of EPNs: "  <<myMsg.numEPNs << endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(long  (25)));
             now=getHistKey();
             }
 
@@ -215,10 +214,10 @@ thread epn::senderThread(int* memory, uint64_t* numepns, uint64_t* id, uint64_t*
 
 void epn:: MyDelayedFun(float delayWork,int* memory, std::stringstream* procTime){
      //(*memory)--;
-     cout<<"amount of memory slots after decrementing: "<<*memory<<endl;
+     //LOG(INFO)<<"amount of memory slots after decrementing: "<<*memory<<endl;
      (*procTime) << delayWork << endl;
      std::this_thread::sleep_for(std::chrono::milliseconds(long  (delayWork*1000)));
-     cout<<"Delayed thread executioning the work now! \n";
+     //cout<<"Delayed thread executioning the work now! \n";
      (*memory)++;
 }
 
@@ -226,7 +225,6 @@ float epn:: getDelay(){
      static std::default_random_engine generator;
      std::normal_distribution<float> distribution(procTime, procDev);
      float delay = distribution(generator);
-     cout<<"Delay work for:" << delay <<"seconds\n";
      return delay;
 }
 

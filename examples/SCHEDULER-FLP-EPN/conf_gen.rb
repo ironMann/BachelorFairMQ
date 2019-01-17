@@ -69,7 +69,7 @@ SOCKET_HASH =
   :address => "", #"tcp://localhost:5556",
   :sndBufSize => 1000,
   :rcvBufSize => 1000,
-  :rateLogging => 10
+  :rateLogging => 0
 }
 
 CHAN_HASH =

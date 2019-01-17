@@ -1,3 +1,4 @@
+
 /*
  * flp.h
  *
@@ -22,7 +23,6 @@ class flp : public FairMQDevice
 
   protected:
     int* arrayofEpns; //just declare a pointer
-    std::stringstream amountOfLostTfs1;
 
 
 
@@ -32,8 +32,11 @@ class flp : public FairMQDevice
     int socket;
     int myId;
     int sTF;
+    int schedNum;
     uint64_t startTime;
     uint64_t programTime;
+    std::stringstream amountOfLostTfs1;
+
 
 
     virtual void Run();

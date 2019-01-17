@@ -22,12 +22,13 @@ namespace example_SCHEDULER_FLP_EPN
 
 flp::flp()
     : arrayofEpns()
-    , msBetweenSubtimeframes(150)
+    , msBetweenSubtimeframes(25)
     , amountEPNs(0)
     , numEPNS(0)
     , socket(0)
     , myId(0)
     , sTF(0)
+    , schedNum(0)
     , startTime(0)
     , programTime(0)
     , amountOfLostTfs1()
@@ -49,10 +50,10 @@ void flp::Run()
 {
     while (CheckCurrentState(RUNNING)) //
     {
-      if(getHistKey()-startTime>=(programTime*60*1000)){
+      if((getHistKey()-startTime)>=(programTime*59*1000)){
 	ofstream amountOfLostTfs;
 	amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
-	amountOfLostTfs<<amountOfLostTfs1;
+	amountOfLostTfs<<amountOfLostTfs1.rdbuf();
         LOG(INFO)<<"TERMINATING PROGRAM NOW!";
         ChangeState("READY");
         ChangeState("RESETTING_TASK");
@@ -74,30 +75,26 @@ void flp::Run()
 
             std::memcpy(msgIReceive.data(), aMessage->GetData(), ((sizeof(uint64_t))*amountEPNs));
             if(aMessage->GetSize() ==((sizeof(uint64_t))*amountEPNs)){
+	      schedNum++;
               int i=0;
               for(vector<uint64_t>::const_iterator iter = msgIReceive.begin(); iter != msgIReceive.end(); ++iter){
-              LOG(info) << "Subtimeframe goes to EPN number: "<< (*iter);
               arrayofEpns[i]=*iter;
-              LOG(info)<<"wrote in arrayofEPns["<<i<<"]: " << arrayofEpns[i];
               i++;
 
 
             }
 
           }
-
-
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
-            cout << "arrayofEpns["<<i<<"]: " <<c<<endl;
-            cout<<"socket number, where it gets sent to:" << (c-1) << " and the STF is: "<< sTF<< endl;
 	    if(c>=0){
             auto &mySendingChan = GetChannel("data", (c-1));
             //the message I want to send
             FLPtoEPN MsgFlpEpn;
             MsgFlpEpn.IdOfFlp = myId;
             MsgFlpEpn.sTF = sTF;
+	    MsgFlpEpn.schedNum=schedNum;
 
 
 
@@ -106,12 +103,12 @@ void flp::Run()
 
             mySendingChan.Send(message);
 
-            LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
+            //LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
             std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes)); //wait 20 ms.
             }
 		
 	   else{
-            LOG(INFO)<< "Unfortunately there is no Epn guaranteeing the memory capacity";
+            //LOG(INFO)<< "Unfortunately there is no Epn guaranteeing the memory capacity";
 	    amountOfLostTfs1<<sTF<<endl;
            }
 	}
