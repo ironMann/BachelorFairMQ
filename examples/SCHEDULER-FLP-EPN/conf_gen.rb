@@ -267,7 +267,7 @@ NUM_FLP.times do | flp |
       "--io-threads", "8",
       "--network-interface", "ib0",
       "--control", "static"
-    ].shelljoin, "2>&1 | tee flp_log_#{NUM_FLP}_#{NUM_EPN}.log\""
+    ].shelljoin, "2>&1 | tee flp_log_#{NUM_FLP}_#{NUM_EPN}_flpid#{flp}.log\""
   ].join(' ')
 
   spm_file_lines << flp_spm
@@ -287,7 +287,7 @@ NUM_EPN.times do | epn |
       "--io-threads", "8",
       "--network-interface", "ib0",
       "--control", "static"
-    ].shelljoin, "2>&1 | tee epn_log_#{NUM_FLP}_#{NUM_EPN}.log\""
+    ].shelljoin, "2>&1 | tee epn_log_#{NUM_FLP}_#{NUM_EPN}_epnid#{epn}.log\""
   ].join(' ')
   spm_file_lines << epn_spm
 end
