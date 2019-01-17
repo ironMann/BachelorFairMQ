@@ -85,6 +85,9 @@ void flp::Run()
             }
 
           }
+	// static const auto cSchedLeninMs = amountEPNs * 25ms;
+	// take the current time here -> schedStartTime
+	      
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
@@ -96,15 +99,16 @@ void flp::Run()
             MsgFlpEpn.sTF = sTF;
 	    MsgFlpEpn.schedNum=schedNum;
 
-
-
             FairMQMessagePtr message = mySendingChan.NewMessage(sizeof(FLPtoEPN));
             std::memcpy(message->GetData(), &MsgFlpEpn, sizeof(FLPtoEPN));
 
             mySendingChan.Send(message);
 
             //LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
-            std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes)); //wait 20 ms.
+	    // if ( (time_now - schedStartTime) / 25ms > i)
+		    continue;
+	    // else
+	            std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes)); //wait 24 ms.
             }
 		
 	   else{
