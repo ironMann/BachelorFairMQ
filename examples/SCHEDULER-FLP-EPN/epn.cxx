@@ -66,41 +66,13 @@ void epn::InitTask()
 
 bool epn::ConditionalRun()
 {
-
-  uint64_t currentTime=getHistKey();
-  if(currentTime-startTime>=programTime){
-    ofstream receptionOfTf, processingTime, numberOfLostTfs;
-
-      receptionOfTf.open("TimebetweenReceptionOfTf.txt."+to_string(Id), std::ios_base::app);
-      processingTime.open("processingTime.txt."+to_string(Id), std::ios_base::app);
-      //numberOfLostTfs.open("numberOfLostTfs.txt."+to_string(Id), std::ios_base::app);
-	
-
-	receptionOfTf<<receptionOfTf1.rdbuf();
-	processingTime<<processingTime1.rdbuf();
-        //numberOfLostTfs<<numberOfLostTfs1.rdbuf();
-	
-
-
-
-
-    LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-    ChangeState("READY");
-    ChangeState("RESETTING_TASK");
-    ChangeState("DEVICE_READY");
-    ChangeState("RESETTING_DEVICE");
-    ChangeState("IDLE");
-    ChangeState("EXITING");
-
-  }
-  else{
      receive();
      return true;
    }
 
 
 
-}
+
 
 
 
@@ -144,11 +116,36 @@ void epn::receive(){
             LOG(ERROR) << "Bad Message ID from FLP" << i+1 << " != " << messagei.IdOfFlp;
             continue;
           }
+	  if(messagei.sTF==1&&messagei.schedNum==-1){
+		 ofstream receptionOfTf, processingTime, numberOfLostTfs;
+
+     		 receptionOfTf.open("TimebetweenReceptionOfTf.txt."+to_string(Id), std::ios_base::app);
+     		 processingTime.open("processingTime.txt."+to_string(Id), std::ios_base::app);
+     		 //numberOfLostTfs.open("numberOfLostTfs.txt."+to_string(Id), std::ios_base::app);
+           
+
+       		 receptionOfTf<<receptionOfTf1.rdbuf();
+       		 processingTime<<processingTime1.rdbuf();
+       		 //numberOfLostTfs<<numberOfLostTfs1.rdbuf();
+        
+
+
+
+
+    		LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+   	        ChangeState("READY");
+   	        ChangeState("RESETTING_TASK");
+   	        ChangeState("DEVICE_READY");
+   	        ChangeState("RESETTING_DEVICE");
+   	        ChangeState("IDLE");
+   	        ChangeState("EXITING");
+		}
 
 
 
           rcvdSTFs[messagei.sTF]++;
           if(rcvdSTFs[messagei.sTF] == numFLPS){
+		
             receptionOfTf1<< (getHistKey()-timeBetweenTf) <<skipws<< endl;
             timeBetweenTf=getHistKey();
            // LOG(info) << "Epn: "<< Id<<" received data from FLP number: " << messagei.IdOfFlp << " and sTF number is "<< messagei.sTF;

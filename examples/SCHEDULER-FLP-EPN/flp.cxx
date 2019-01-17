@@ -50,20 +50,6 @@ void flp::Run()
 {
     while (CheckCurrentState(RUNNING)) //
     {
-      if((getHistKey()-startTime)>=(programTime*59*1000)){
-	ofstream amountOfLostTfs;
-	amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
-	amountOfLostTfs<<amountOfLostTfs1.rdbuf();
-        LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-        ChangeState("READY");
-        ChangeState("RESETTING_TASK");
-        ChangeState("DEVICE_READY");
-        ChangeState("RESETTING_DEVICE");
-        ChangeState("IDLE");
-        ChangeState("EXITING");
-      }
-
-      else{
             auto &myRecvChan = GetChannel("schedflp");
             //I expect this kind of message
             std::vector<uint64_t> msgIReceive (amountEPNs, 0);
@@ -82,7 +68,29 @@ void flp::Run()
               i++;
 
 
-            }
+               }
+	    if((arrayofEpns[0]==3)&&(arrayofEpns[1]==3)){
+		for(int  i=0; i<numEPNS; i++){
+		    auto &mySendingChan = GetChannel("data", i);
+		    FLPtoEPN MsgFlpEpn;
+		    MsgFlpEpn.IdOfFlp=myId;
+		    MsgFlpEpn.sTF=1;
+		    MsgFlpEpn.schedNum=-1;
+		    FairMQMessagePtr message = mySendingChan.NewMessage(sizeof(FLPtoEPN));
+                    std::memcpy(message->GetData(), &MsgFlpEpn, sizeof(FLPtoEPN));
+
+                     mySendingChan.Send(message);
+		     }
+	        ofstream amountOfLostTfs;
+                amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
+                amountOfLostTfs<<amountOfLostTfs1.rdbuf();
+                LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+                ChangeState("READY");
+                ChangeState("RESETTING_TASK");
+                ChangeState("DEVICE_READY");
+                ChangeState("RESETTING_DEVICE");
+                ChangeState("IDLE");
+                ChangeState("EXITING");
 
           }
 	LOG(INFO)<< "time now: " << getHistKey();
@@ -144,3 +152,4 @@ flp::~flp()
 
 }
 }
+
