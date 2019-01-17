@@ -237,7 +237,7 @@ FAIRMQ_DEVS =
 
 spm_file_lines = [ ]
 # spm file
-sched_spm = [ SCHED_NODE, ":", "/bin/bash -i -c \"",
+sched_spm = [ SCHED_NODE, ":", "/bin/bash -c \"",
   [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-scheduler",
     "--id", "scheduler",
     "--amountEPNs", ENV['TEST_AMOUNT_EPN'],
@@ -254,7 +254,7 @@ spm_file_lines << sched_spm
 spm_file_lines << ""
 
 NUM_FLP.times do | flp |
-  flp_spm = [ flp_node_map[flp][:node] , ":", "/bin/bash -i -c \"",
+  flp_spm = [ flp_node_map[flp][:node] , ":", "/bin/bash -c \"",
     [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-flp",
       "--id", "flp#{flp}",
       "--myId", "#{flp + 1}",
@@ -275,7 +275,7 @@ end
 spm_file_lines << ""
 
 NUM_EPN.times do | epn |
-  epn_spm = [ epn_node_map[epn] , ":", "/bin/bash -i -c \"",
+  epn_spm = [ epn_node_map[epn] , ":", "/bin/bash -c \"",
     [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-epn",
       "--id", "epn#{epn}",
       "--myId", "#{epn + 1}",
