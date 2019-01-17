@@ -46,6 +46,17 @@ void flp::InitTask()
     startTime=getHistKey();
 }
 
+static
+uint64_t getCurrentMs(){
+    //get the current time
+    const auto time = std::chrono::high_resolution_clock::now();
+    //get the time from THEN to now
+    auto duration = time.time_since_epoch();
+    const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    return intKey;
+}
+	
 void flp::Run()
 {
     while (CheckCurrentState(RUNNING)) //
@@ -69,7 +80,8 @@ void flp::Run()
 
 
                }
-	    if((arrayofEpns[0]==3)&&(arrayofEpns[1]==3)){
+
+		if((arrayofEpns[0]==3)&&(arrayofEpns[1]==3)){
 		for(int  i=0; i<numEPNS; i++){
 		    auto &mySendingChan = GetChannel("data", i);
 		    FLPtoEPN MsgFlpEpn;
@@ -81,19 +93,15 @@ void flp::Run()
 
                      mySendingChan.Send(message);
 		     }
-	        ofstream amountOfLostTfs;
+	        
+		ofstream amountOfLostTfs;
                 amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
                 amountOfLostTfs<<amountOfLostTfs1.rdbuf();
                 LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-                ChangeState("READY");
-                ChangeState("RESETTING_TASK");
-                ChangeState("DEVICE_READY");
-                ChangeState("RESETTING_DEVICE");
-                ChangeState("IDLE");
-                ChangeState("EXITING");
-
+		return;
           }
 	LOG(INFO)<< "time now: " << getHistKey();
+	const auto startSendTime = getCurrentMs();     
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
@@ -105,15 +113,17 @@ void flp::Run()
             MsgFlpEpn.sTF = sTF;
 	    MsgFlpEpn.schedNum=schedNum;
 
-
-
             FairMQMessagePtr message = mySendingChan.NewMessage(sizeof(FLPtoEPN));
             std::memcpy(message->GetData(), &MsgFlpEpn, sizeof(FLPtoEPN));
 
             mySendingChan.Send(message);
 
             //LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
-            std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes)); //wait 20 ms.
+	    if ((getCurrentMs() - startSendTime) / msBetweenSubtimeframes > i) {
+		    continue; // send more
+	    } else {
+            	std::this_thread::sleep_for(std::chrono::milliseconds(msBetweenSubtimeframes - 1)); //wait 25 - 1 ms.
+	    }
             }
 		
 	   else{
@@ -142,7 +152,6 @@ uint64_t flp::getHistKey(){
     return intKey;
 
 }
-
 
 
 flp::~flp()
