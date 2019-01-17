@@ -62,23 +62,21 @@ void scheduler::InitTask(){
 
 bool scheduler::ConditionalRun()
 {
-
    if((getHistKey()-keyForExiting)>(programTime*60*1000)){
 	//SEND MESSAGE TO FLPS SAYING IT's ALL 3
-      vector<uint64_t> vect;
-      for(int i=0; i<amountEPNs;i++){
+	vector<uint64_t> vect;
+	for(int i=0; i<amountEPNs;i++) {
 		vect.push_back(3);
-		}
-      for(uint64_t i=0; i<numFLPS; i++){
-      auto &mySendingChan = GetChannel("schedflp", i);
+	}
+	
 
-      FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*vect.size());
-      std::memcpy(message->GetData(), vect.data(), message->GetSize());
-      mySendingChan.Send(message);
-
+	for(uint64_t i=0; i<numFLPS; i++) {
+		auto &mySendingChan = GetChannel("schedflp", i);
+		FairMQMessagePtr message = mySendingChan.NewMessage((sizeof(uint64_t))*vect.size());
+		std::memcpy(message->GetData(), vect.data(), message->GetSize());
+		mySendingChan.Send(message);
        }
 
-	 
       LOG(INFO)<<"about to terminate the program!";
       ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
       ofHeatdata.open("heatdata.txt", std::ios_base::app);
@@ -99,22 +97,20 @@ bool scheduler::ConditionalRun()
   	 poller->Poll(100);
 
    	 for(int i= 0; i < numEPNS; i++){
-     		 if (!poller->CheckInput("epnsched", i)) {
-       			 continue;
-     			 }
-
-       		 auto &myRecvChan = GetChannel("epnsched",i);
-       		 // I expect this kind of messages
-       		 EPNtoScheduler msgFromSender;
-       		 // receive a message
-       		 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-       		 myRecvChan.Receive(aMessage);
-		if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
-       			 // get the data of the FairMQ message
-       			 std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
-       			//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
-       			update(msgFromSender.Id, msgFromSender.freeSlots);
-		}
+     		 while (poller->CheckInput("epnsched", i)) {
+			 auto &myRecvChan = GetChannel("epnsched",i);
+			 // I expect this kind of messages
+			 EPNtoScheduler msgFromSender;
+			 // receive a message
+			 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
+			 myRecvChan.Receive(aMessage);
+			if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
+				 // get the data of the FairMQ message
+				 std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
+				//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
+				update(msgFromSender.Id, msgFromSender.freeSlots);
+			}
+		 }
    	 }
 
    	 if(getHistKey() >= (keyForGeneratingArray + uint64_t( intervalFLPs*1000.0))){
@@ -134,13 +130,10 @@ bool scheduler::ConditionalRun()
          	scheduleNumber++;
          	std::thread t1= senderThread(&vectorForFlps, &numFLPS, &amountEPNs, &scheduleNumber);
          	t1.detach();
-    		 }
-
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    	}
      }
   return true;
-	
-
- 
 }
 
 
@@ -162,8 +155,8 @@ uint64_t scheduler::getHistKey(){
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     //std::cout << "Milliseconds : " << millis << std::endl;
     //determine the interval (key for the hist map)
-    //const std::uint64_t intKey = millis / 1000  * 1000;
-    const std::uint64_t intKey = millis /  25   * 25;
+    const std::uint64_t intKey = millis / 1000  * 1000;
+//     const std::uint64_t intKey = millis /  25   * 25;
     //cout<< "histKey : " << intKey << endl;
 
     return intKey;
