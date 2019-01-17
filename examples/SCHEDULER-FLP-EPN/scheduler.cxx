@@ -63,24 +63,11 @@ void scheduler::InitTask(){
 bool scheduler::ConditionalRun()
 {
 
-    if((getHistKey()-keyForExiting)>((programTime*60*1000)-1000)){
-      LOG(INFO)<<"about to terminate the program!";
-      ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
-      ofHeatdata.open("heatdata.txt", std::ios_base::app);
-      ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
-      ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
-      ofHeatdata<<heatdata1.rdbuf();
-      ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
-      ofAvailableEpns<<availableEpns1.rdbuf();
-
-      LOG(INFO)<<"TERMINATING PROGRAM NOW!";
-      return false;
-    }
 
 
-    
-   FairMQPollerPtr poller(NewPoller("epnsched"));
-   poller->Poll(100);
+   while((getHistKey()-keyForExiting)<=((programTime*60*1000)-1000)){    
+  	 FairMQPollerPtr poller(NewPoller("epnsched"));
+  	 poller->Poll(100);
 
     for(int i= 0; i < numEPNS; i++){
       if (!poller->CheckInput("epnsched", i)) {
@@ -133,6 +120,20 @@ bool scheduler::ConditionalRun()
 
   
   return true;
+	}
+      LOG(INFO)<<"about to terminate the program!";
+      ofstream ofHeatdata, ofEpnsInSchedule, ofAvailableEpns;
+      ofHeatdata.open("heatdata.txt", std::ios_base::app);
+      ofEpnsInSchedule.open("EpnsInSchedule.txt",std::ios_base::app);
+      ofAvailableEpns.open("availableEpns.txt", std::ios_base::app);
+      ofHeatdata<<heatdata1.rdbuf();
+      ofEpnsInSchedule<<EpnsInSchedule1.rdbuf();
+      ofAvailableEpns<<availableEpns1.rdbuf();
+
+      LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+      return false;
+
+ 
 }
 
 

@@ -222,7 +222,7 @@ void epn:: MyDelayedFun(float delayWork,int* memory, std::stringstream* procTime
 }
 
 float epn:: getDelay(){
-     static std::default_random_engine generator;
+     static std::random_device generator;
      std::normal_distribution<float> distribution(procTime, procDev);
      float delay = distribution(generator);
      return delay;

@@ -85,6 +85,7 @@ void flp::Run()
             }
 
           }
+	LOG(INFO)<< "time now: " << getHistKey();
         for(int i=0; i<amountEPNs; i++){
             sTF++;
             int c = arrayofEpns[i];
