@@ -54,7 +54,7 @@ uint64_t getCurrentMs(){
     auto duration = time.time_since_epoch();
     const std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-    return intKey;
+    return millis;
 }
 	
 void flp::Run()
