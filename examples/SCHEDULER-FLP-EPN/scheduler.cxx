@@ -105,7 +105,7 @@ bool scheduler::ConditionalRun()
 			 while(true) {
 				 // receive a message
 				 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-				 if (myRecvChan.Receive(aMessage, 0) == sizeof(EPNtoScheduler) {
+				 if (myRecvChan.Receive(aMessage, 0) == sizeof(EPNtoScheduler)) {
 					if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
 						 // get the data of the FairMQ message
 					 	std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
