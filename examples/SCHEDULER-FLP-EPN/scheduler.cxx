@@ -112,7 +112,9 @@ bool scheduler::ConditionalRun()
 						//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
 						update(msgFromSender.Id, msgFromSender.freeSlots);
 					}
-				}
+				} else {
+					break;
+				 }
 			}
 		 }
    	 }
