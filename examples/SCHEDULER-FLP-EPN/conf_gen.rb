@@ -237,7 +237,7 @@ FAIRMQ_DEVS =
 
 spm_file_lines = [ ]
 # spm file
-sched_spm = [ SCHED_NODE, ":",
+sched_spm = [ SCHED_NODE, ":", "/bin/bash -i -c \"",
   [ "/bin/bash -i -c \"#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-scheduler",
     "--id", "scheduler",
     "--amountEPNs", ENV['TEST_AMOUNT_EPN'],
@@ -247,16 +247,15 @@ sched_spm = [ SCHED_NODE, ":",
     "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
     "--io-threads", "16",
     "--network-interface", "ib0",
-    "--control", "static",
-    "2>&1 | tee sched_log_#{NUM_FLP}_#{NUM_EPN}.log\""
-  ].shelljoin ].join(' ')
+    "--control", "static"
+  ].shelljoin, "2>&1 | tee sched_log_#{NUM_FLP}_#{NUM_EPN}.log\"" ].join(' ')
 
 spm_file_lines << sched_spm
 spm_file_lines << ""
 
 NUM_FLP.times do | flp |
-  flp_spm = [ flp_node_map[flp][:node] , ":",
-    [ "/bin/bash -i -c \"#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-flp",
+  flp_spm = [ flp_node_map[flp][:node] , ":", "/bin/bash -i -c \"",
+    [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-flp",
       "--id", "flp#{flp}",
       "--myId", "#{flp + 1}",
       "--socket", "#{flp}",
@@ -267,9 +266,8 @@ NUM_FLP.times do | flp |
       "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
       "--io-threads", "8",
       "--network-interface", "ib0",
-      "--control", "static",
-      "2>&1 | tee flp_log_#{NUM_FLP}_#{NUM_EPN}.log\""
-    ].shelljoin
+      "--control", "static"
+    ].shelljoin, "2>&1 | tee flp_log_#{NUM_FLP}_#{NUM_EPN}.log\""
   ].join(' ')
 
   spm_file_lines << flp_spm
@@ -277,8 +275,8 @@ end
 spm_file_lines << ""
 
 NUM_EPN.times do | epn |
-  epn_spm = [ epn_node_map[epn] , ":",
-    [ "/bin/bash -i -c \"#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-epn",
+  epn_spm = [ epn_node_map[epn] , ":", "/bin/bash -i -c \"",
+    [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-epn",
       "--id", "epn#{epn}",
       "--myId", "#{epn + 1}",
       "--maxSlots", "#{ENV['TEST_NUM_SLOTS']}",
@@ -288,9 +286,8 @@ NUM_EPN.times do | epn |
       "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
       "--io-threads", "8",
       "--network-interface", "ib0",
-      "--control", "static",
-      "2>&1 | tee epn_log_#{NUM_FLP}_#{NUM_EPN}.log\""
-    ].shelljoin
+      "--control", "static"
+    ].shelljoin, "2>&1 | tee epn_log_#{NUM_FLP}_#{NUM_EPN}.log\""
   ].join(' ')
   spm_file_lines << epn_spm
 end
