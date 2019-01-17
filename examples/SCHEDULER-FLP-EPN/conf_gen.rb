@@ -238,7 +238,7 @@ FAIRMQ_DEVS =
 spm_file_lines = [ ]
 # spm file
 sched_spm = [ SCHED_NODE, ":", "/bin/bash -i -c \"",
-  [ "/bin/bash -i -c \"#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-scheduler",
+  [ "#{ENV['TEST_ROOT_DIR']}/fairmq-ex-SCHEDULER-FLP-EPN-scheduler",
     "--id", "scheduler",
     "--amountEPNs", ENV['TEST_AMOUNT_EPN'],
     "--numEPNS", "#{NUM_EPN}",
