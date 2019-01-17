@@ -97,18 +97,22 @@ bool scheduler::ConditionalRun()
   	 poller->Poll(100);
 
    	 for(int i= 0; i < numEPNS; i++){
-     		 while (poller->CheckInput("epnsched", i)) {
+     		 if (poller->CheckInput("epnsched", i)) {
 			 auto &myRecvChan = GetChannel("epnsched",i);
+			 // try to receive more updates
 			 // I expect this kind of messages
 			 EPNtoScheduler msgFromSender;
-			 // receive a message
-			 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-			 myRecvChan.Receive(aMessage);
-			if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
-				 // get the data of the FairMQ message
-				 std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
-				//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
-				update(msgFromSender.Id, msgFromSender.freeSlots);
+			 while(true) {
+				 // receive a message
+				 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
+				 if (myRecvChan.Receive(aMessage, 0) == sizeof(EPNtoScheduler) {
+					if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
+						 // get the data of the FairMQ message
+					 	std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
+						//LOG(INFO)<<"received ID: "<<msgFromSender.Id<<" and amount of free slots "<<msgFromSender.freeSlots<<" and amount of EPNs is: "<< msgFromSender.numEPNs << endl;
+						update(msgFromSender.Id, msgFromSender.freeSlots);
+					}
+				}
 			}
 		 }
    	 }
