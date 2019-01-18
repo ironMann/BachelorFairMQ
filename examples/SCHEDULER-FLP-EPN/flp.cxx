@@ -118,7 +118,7 @@ void flp::Run()
 
             mySendingChan.Send(message);
 
-            //LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
+            LOG(info) << "Sent to Epn \"" << c << " and subtimeframe: "<<MsgFlpEpn.sTF<< " and my Id is: "<< MsgFlpEpn.IdOfFlp<< "\"";
 	    if ((getCurrentMs() - startSendTime) / msBetweenSubtimeframes > i) {
 		    continue; // send more
 	    } else {

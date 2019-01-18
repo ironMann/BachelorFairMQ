@@ -26,7 +26,7 @@ scheduler::scheduler()
           ,numFLPS(0)
           ,intMs(1000) //one second
           ,programTime(0)//alive time of the program
-          ,historyMaxMs(60*1*intMs)//one minute
+          ,historyMaxMs(59*1*intMs)//one minute
           ,msBetweenSubtimeframes(0.625)
           ,amountEPNs(0)
           ,intervalFLPs(1)//interval of sending out schedule
@@ -49,11 +49,11 @@ void scheduler::InitTask(){
     numFLPS=fConfig->GetValue<uint64_t>("numFLPS");
     amountEPNs=fConfig->GetValue<uint64_t>("amountEPNs");
     programTime=fConfig->GetValue<uint64_t>("programTime");
-    keyForToFile = getHistKey();
+    initialize(numEPNS);
+    std::this_thread::sleep_for(std::chrono::milliseconds (10000));
+    keyForToFile=getHistKey();
     keyForGeneratingArray=getHistKey();
     keyForExiting=getHistKey();
-    initialize(numEPNS);
-    std::this_thread::sleep_for(std::chrono::milliseconds (5000));
   
 
 
@@ -102,10 +102,10 @@ bool scheduler::ConditionalRun()
 			 // try to receive more updates
 			 // I expect this kind of messages
 			 EPNtoScheduler msgFromSender;
-			 while(true) {
+			 if(true) {
 				 // receive a message
 				 FairMQMessagePtr aMessage = myRecvChan.NewMessage();
-				 if (myRecvChan.Receive(aMessage, 0) == sizeof(EPNtoScheduler)) {
+				 if (myRecvChan.Receive(aMessage) == sizeof(EPNtoScheduler)) {
 					if(aMessage->GetSize() == sizeof(EPNtoScheduler)){ 
 						 // get the data of the FairMQ message
 					 	std::memcpy(&msgFromSender, aMessage->GetData(), sizeof(EPNtoScheduler));
@@ -113,6 +113,9 @@ bool scheduler::ConditionalRun()
 						update(msgFromSender.Id, msgFromSender.freeSlots);
 					}
 				}
+				else{
+					break;
+			       	}
 			}
 		 }
    	 }
@@ -124,11 +127,15 @@ bool scheduler::ConditionalRun()
 		LOG(INFO) << "Creating the schedule " << scheduleNumber << " at time " << getHistKey() << " lastKey " << keyForGeneratingArray;
        		LOG(INFO) << "intervalFLPs " << intervalFLPs;
 
-	 	 vectorForFlps=simpleRRSched(m);
-        	 m=(m+amountEPNs)%numEPNS;
-        	 availableEpns1<<availableEpns(generateArray1(), numEPNS)<<endl;
-         	//vectorForFlps = generateSchedule();
-         	EpnsInSchedule1<<EpnsInSchedule(availableEpns(generateArray1(), numEPNS), amountEPNs)<<endl;
+	 	 //vectorForFlps=simpleRRSched(m);
+        	 //m=(m+amountEPNs)%numEPNS;
+		int f = availableEpns(generateArray1(), numEPNS);
+		LOG(INFO)<<"Epns having at least one free memory slot: "<< f;
+        	availableEpns1<<f<<endl;
+		int inSchedule= EpnsInSchedule(f, amountEPNs);
+		LOG(INFO)<<"Epns in Schedule: "<< inSchedule;
+         	EpnsInSchedule1<<inSchedule<<endl;
+		vectorForFlps = generateSchedule();
          	//printVecFLP(vectorForFlps);
          	keyForGeneratingArray = getHistKey();
          	scheduleNumber++;
