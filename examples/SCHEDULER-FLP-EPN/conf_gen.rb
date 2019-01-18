@@ -13,10 +13,11 @@ Usage:
 
   NOTE:
   1. <node_list> must contain at least 3 nodes
-  2. env var TEST_ROOT_DIR : full path to the programs and config files
-  3. env var TEST_NUM_SLOTS : num of TF slots at the epns
-  4. env var TEST_AMOUNT_EPN : amount of TF in the schedule
-  5. env var TEST_WALL_TIME : run the code for this many minutes
+  2. env var TEST_ROOT_DIR : full path to the programs
+  3. env var TEST_CONF_DIR : full path where to save conf files
+  4. env var TEST_NUM_SLOTS : num of TF slots at the epns
+  5. env var TEST_AMOUNT_EPN : amount of TF in the schedule
+  6. env var TEST_WALL_TIME : run the code for this many minutes
 
   Examples:
   $ conf_gen.rb 20 10 pn02,pn04,pn05,pn06,pn07,pn08,pn10,pn11,pn12,pn13,pn15,pn16
@@ -32,7 +33,7 @@ end
 
 
 usage(true) if ARGV[0].nil? or ARGV[0].length==0 or ARGV[1].nil? or ARGV[2].nil? or
-              ENV['TEST_ROOT_DIR'].nil? or ENV['TEST_NUM_SLOTS'].nil? or
+              ENV['TEST_ROOT_DIR'].nil? or ENV['TEST_CONF_DIR'].nil? or ENV['TEST_NUM_SLOTS'].nil? or
               ENV['TEST_AMOUNT_EPN'].nil? or ENV['TEST_WALL_TIME'].nil?
 
 
@@ -244,7 +245,7 @@ sched_spm = [ SCHED_NODE, ":", "/bin/bash -c \"",
     "--numEPNS", "#{NUM_EPN}",
     "--numFLPS", "#{NUM_FLP}",
     "--programTime", ENV['TEST_WALL_TIME'],
-    "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+    "--mq-config", "#{ENV['TEST_CONF_DIR']}/json_conf_#{NUM_FLP}_#{NUM_EPN}.json",
     "--io-threads", "16",
     "--network-interface", "ib0",
     "--control", "static"
@@ -263,7 +264,7 @@ NUM_FLP.times do | flp |
       "--numEPNS", "#{NUM_EPN}",
       "--numFLPS", "#{NUM_FLP}",
       "--programTime", ENV['TEST_WALL_TIME'],
-      "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+      "--mq-config", "#{ENV['TEST_CONF_DIR']}/json_conf_#{NUM_FLP}_#{NUM_EPN}.json",
       "--io-threads", "8",
       "--network-interface", "ib0",
       "--control", "static"
@@ -283,7 +284,7 @@ NUM_EPN.times do | epn |
       "--numEPNS", "#{NUM_EPN}",
       "--numFLPS", "#{NUM_FLP}",
       "--programTime", ENV['TEST_WALL_TIME'],
-      "--mq-config", "#{ENV['TEST_ROOT_DIR']}/conf.json",
+      "--mq-config", "#{ENV['TEST_CONF_DIR']}/json_conf_#{NUM_FLP}_#{NUM_EPN}.json",
       "--io-threads", "8",
       "--network-interface", "ib0",
       "--control", "static"
@@ -296,11 +297,11 @@ end
 # pp flp_config
 # pp epn_config
 
-File.open("json_conf_#{NUM_FLP}_#{NUM_EPN}.json", "w") do |f|
+File.open("#{ENV['TEST_CONF_DIR']}/json_conf_#{NUM_FLP}_#{NUM_EPN}.json", "w") do |f|
   f.puts JSON.pretty_generate(FAIRMQ_DEVS)
 end
 
-File.open("spm_conf_#{NUM_FLP}_#{NUM_EPN}.spm", "w") do |f|
+File.open("#{ENV['TEST_CONF_DIR']}/spm_conf_#{NUM_FLP}_#{NUM_EPN}.spm", "w") do |f|
   f.puts spm_file_lines.join("\n")
 end
 
