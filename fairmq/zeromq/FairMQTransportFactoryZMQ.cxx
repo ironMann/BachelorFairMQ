@@ -27,12 +27,12 @@ FairMQTransportFactoryZMQ::FairMQTransportFactoryZMQ(const string& id, const Fai
         exit(EXIT_FAILURE);
     }
 
-    if (zmq_ctx_set(fContext, ZMQ_MAX_SOCKETS, 10000) != 0)
+    if (zmq_ctx_set(fContext, ZMQ_MAX_SOCKETS, 40000) != 0)
     {
         LOG(error) << "failed configuring context, reason: " << zmq_strerror(errno);
     }
 
-    int numIoThreads = 1;
+    int numIoThreads = 8;
     if (config)
     {
         numIoThreads = config->GetValue<int>("io-threads");
