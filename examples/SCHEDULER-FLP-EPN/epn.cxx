@@ -144,6 +144,8 @@ bool epn::receive() {
     }
   }
 
+  LOG(INFO) << "Received " << num_reveived << " STFs";
+
   return true;
 }
 
