@@ -8,79 +8,58 @@
 #ifndef FAIRMQEXAMPLESCHEDULERFLPEPNEPN_H
 #define FAIRMQEXAMPLESCHEDULERFLPEPNEPN_H
 
-#include "FairMQDevice.h"
-#include "Message.h"
 #include <time.h>
 #include <iostream>
-#include <string>
 #include <random>
-#include <thread>
 #include <sstream>
+#include <string>
+#include <thread>
+#include "FairMQDevice.h"
+#include "Message.h"
 
+namespace example_SCHEDULER_FLP_EPN {
 
+class epn : public FairMQDevice {
+ public:
+  epn();
+  virtual ~epn();
+  void send(int* memory, uint64_t* numepns, uint64_t* id);
 
+ protected:
+  uint64_t Id;
+  int freeSlots;
+  uint64_t maxSlots;
+  uint64_t numEPNS;
+  uint64_t numFLPS;
+  std::map<unsigned long, int> rcvdSTFs;
+  std::map<unsigned long, int>::iterator it;
+  int sTF;
 
-namespace example_SCHEDULER_FLP_EPN
-{
+  const float procTime;
+  const float procDev;
 
-class epn : public FairMQDevice
-{
-  public:
-    epn();
-    virtual ~epn();
-    void send(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max);
+  uint64_t startTime;
+  uint64_t timeBetweenTf;
+  uint64_t programTime;  // the duration of the program.
+  const unsigned intMs;
 
+  std::stringstream receptionOfTf1;
+  std::stringstream processingTime1;
+  std::stringstream numberOfLostTfs1;
 
-  protected:
-    uint64_t Id;
-    int freeSlots;
-    uint64_t maxSlots;
-    uint64_t numEPNS;
-    uint64_t numFLPS;
-    std::map<unsigned long,int> rcvdSTFs;
-    std::map<unsigned long,int>::iterator it;
-    int sTF;
+  virtual void InitTask();
+  virtual bool ConditionalRun();
 
-    const float procTime;
-    const float procDev;
+  std::string getChannel(char number);
+  bool receive();
 
-    uint64_t startTime;
-    uint64_t timeBetweenTf;
-    uint64_t programTime; //the duration of the program.
-    const unsigned intMs;
+  std::thread senderThread(int* memory, uint64_t* numepns, uint64_t* id);
 
-    std::stringstream receptionOfTf1;
-    std::stringstream processingTime1;
-    std::stringstream numberOfLostTfs1;
+  static void MyDelayedFun(float delayWork, int* memory, std::stringstream* procTime);
+  float getDelay();
 
-
-
-
-
-    virtual void InitTask();
-    virtual bool ConditionalRun();
-
-    std::string getChannel(char number);
-    void receive();
-
-
-
-    std::thread senderThread(int* memory, uint64_t* numepns, uint64_t* id, uint64_t* start,const uint64_t* max);
-
-
-    static void MyDelayedFun(float delayWork, int* memory, std::stringstream* procTime);
-    float getDelay();
-
-    uint64_t getHistKey();
-
-
-
-
-
-
-
+  uint64_t getHistKey();
 };
-
 }
 
 #endif /* FAIRMQEXAMPLESCHEDULERFLPEPNEPN_H */
