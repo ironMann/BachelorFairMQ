@@ -98,6 +98,7 @@ void flp::Run()
                 amountOfLostTfs.open("amountOfLostTfs.txt."+to_string(myId), std::ios_base::app);
                 amountOfLostTfs<<amountOfLostTfs1.rdbuf();
                 LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+		exit(0);
 		return;
           }
 	LOG(INFO)<< "time now: " << getHistKey();

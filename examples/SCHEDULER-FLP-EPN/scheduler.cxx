@@ -27,7 +27,7 @@ scheduler::scheduler()
           ,intMs(1000) //one second
           ,programTime(0)//alive time of the program
           ,historyMaxMs(59*1*intMs)//one minute
-          ,msBetweenSubtimeframes(0.625)
+          ,epnsInScheduleRR(0)
           ,amountEPNs(0)
           ,intervalFLPs(1)//interval of sending out schedule
           ,vectorForFlps(0)
@@ -50,7 +50,7 @@ void scheduler::InitTask(){
     amountEPNs=fConfig->GetValue<uint64_t>("amountEPNs");
     programTime=fConfig->GetValue<uint64_t>("programTime");
     initialize(numEPNS);
-    std::this_thread::sleep_for(std::chrono::milliseconds (10000));
+    std::this_thread::sleep_for(std::chrono::milliseconds (20000));
     keyForToFile=getHistKey();
     keyForGeneratingArray=getHistKey();
     keyForExiting=getHistKey();
@@ -87,6 +87,7 @@ bool scheduler::ConditionalRun()
       ofAvailableEpns<<availableEpns1.rdbuf();
 
       LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+      exit(0);
       return false;
 	}
 	
@@ -126,16 +127,17 @@ bool scheduler::ConditionalRun()
 
 		LOG(INFO) << "Creating the schedule " << scheduleNumber << " at time " << getHistKey() << " lastKey " << keyForGeneratingArray;
        		LOG(INFO) << "intervalFLPs " << intervalFLPs;
-
-	 	 //vectorForFlps=simpleRRSched(m);
-        	 //m=(m+amountEPNs)%numEPNS;
+		vectorForFlps=simpleRRSched(m);
+                m=(m+amountEPNs)%numEPNS;
 		int f = availableEpns(generateArray1(), numEPNS);
 		LOG(INFO)<<"Epns having at least one free memory slot: "<< f;
         	availableEpns1<<f<<endl;
-		int inSchedule= EpnsInSchedule(f, amountEPNs);
-		LOG(INFO)<<"Epns in Schedule: "<< inSchedule;
-         	EpnsInSchedule1<<inSchedule<<endl;
-		vectorForFlps = generateSchedule();
+		//int inSchedule= EpnsInSchedule(f, amountEPNs);
+		//LOG(INFO)<<"Epns in Schedule: "<< inSchedule;
+         	//EpnsInSchedule1<<inSchedule<<endl;
+		EpnsInSchedule1<<epnsInScheduleRR<<endl;
+		epnsInScheduleRR=0;
+		//vectorForFlps = generateSchedule();
          	//printVecFLP(vectorForFlps);
          	keyForGeneratingArray = getHistKey();
          	scheduleNumber++;
@@ -431,6 +433,7 @@ std::vector<uint64_t> scheduler::simpleRRSched(int mm){
 		 else{
 			LOG(INFO)<<"memory capacity";	
    	       		roundr.push_back(j);
+			epnsInScheduleRR++;
 			LOG(INFO)<<"pushed back: "<< j;
  	       		}
 		}
@@ -444,6 +447,7 @@ std::vector<uint64_t> scheduler::simpleRRSched(int mm){
                  else{
                        		 LOG(INFO)<<"memory capacity";   
                        		 roundr.push_back(k);
+				 epnsInScheduleRR++;
                        		 LOG(INFO)<<"pushed back: "<< k;
 			       	}
 

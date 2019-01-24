@@ -133,6 +133,7 @@ void epn::receive(){
 
 
     		LOG(INFO)<<"TERMINATING PROGRAM NOW!";
+		exit(0);
    	        ChangeState("READY");
    	        ChangeState("RESETTING_TASK");
    	        ChangeState("DEVICE_READY");

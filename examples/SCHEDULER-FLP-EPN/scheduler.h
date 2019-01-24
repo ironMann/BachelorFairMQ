@@ -40,7 +40,7 @@ class scheduler : public FairMQDevice
 
 
        //constants to generate array sent to FLPs
-    const unsigned msBetweenSubtimeframes; //the amount of subtimeframes the FLPs send to the EPNs per second
+    int  epnsInScheduleRR; //the amount of subtimeframes the FLPs send to the EPNs per second
     uint64_t amountEPNs; //amount of EPNs that are in the array the Scheduler needs to send to the FLPs
     const float intervalFLPs; // the interval in seconds in which the scheduler needs to send array to all FLPs
 
