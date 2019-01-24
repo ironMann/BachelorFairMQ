@@ -128,8 +128,6 @@ sched_dev[:channels] << sched_epn_chan
 
 
 
-
-
 ###################
 FLP_DATA_PORT = 20000
 flp_port_per_node = {} # track used data ports on each flp node
@@ -170,7 +168,7 @@ NUM_FLP.times do | flp |
   flp_sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
   flp_sched_socket[:type] = "pull"
   flp_sched_socket[:method] = "connect"
-  flp_sched_socket[:address] = "tcp://#{SCHED_NODE}:#{SCHED_FLP_PORT + flp}"
+  flp_sched_socket[:address] = "tcp://#{SCHED_NODE}ib0:#{SCHED_FLP_PORT + flp}"
 
   flp_sched_chan[:sockets] << flp_sched_socket
   flp_dev[:channels] << flp_sched_chan
@@ -204,7 +202,7 @@ NUM_EPN.times do | epn |
     flp_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
     flp_socket[:type] = "pull"
     flp_socket[:method] = "connect"
-    flp_socket[:address] = "tcp://#{flp_node_map[flp][:node]}:#{flp_node_map[flp][:data_ports][epn]}"
+    flp_socket[:address] = "tcp://#{flp_node_map[flp][:node]}ib0:#{flp_node_map[flp][:data_ports][epn]}"
     # flp_config[flp][:channels][0][:sockets][epn][:address]
 
     epn_data_chan[:sockets] << flp_socket
@@ -217,7 +215,7 @@ NUM_EPN.times do | epn |
   epn_sched_socket = Marshal.load(Marshal.dump(SOCKET_HASH))
   epn_sched_socket[:type] = "push"
   epn_sched_socket[:method] = "connect"
-  epn_sched_socket[:address] = "tcp://#{SCHED_NODE}:#{SCHED_EPN_PORT + epn}"
+  epn_sched_socket[:address] = "tcp://#{SCHED_NODE}ib0:#{SCHED_EPN_PORT + epn}"
 
   epn_sched_chan[:sockets] << epn_sched_socket
   epn_dev[:channels] << epn_sched_chan
